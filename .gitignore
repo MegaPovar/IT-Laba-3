@@ -1,4 +1,5 @@
 .DS_Store
+build/
 lab2
 lab3
 tests_runner

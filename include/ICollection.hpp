@@ -1,12 +1,10 @@
 #pragma once
 
-#include <cstddef>
-
 template <class T>
 class ICollection {
 public:
-    virtual ~ICollection() {}
+    virtual ~ICollection() {} //для удаления через указатель
 
-    virtual T Get(std::size_t index) const = 0;
-    virtual std::size_t GetCount() const = 0;
+    virtual T Get(int index) const = 0; // получить элемент по номеру
+    virtual int GetCount() const = 0; // количество элементов
 };

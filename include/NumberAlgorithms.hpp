@@ -4,10 +4,10 @@
 #include "Exceptions.hpp"
 #include "SequenceAlgorithms.hpp"
 
-inline Sequence<int>* Range(int low, int high) {
+inline Sequence<int>* Range(int low, int high) { // генерируем числа от low до high включительно
     if (low > high) {
         throw InvalidArgument("Range low cannot be greater than high");
-    }
+    } 
 
     Sequence<int>* result = new MutableArraySequence<int>();
     for (int value = low; value <= high; ++value) {
@@ -16,7 +16,7 @@ inline Sequence<int>* Range(int low, int high) {
     return result;
 }
 
-inline bool IsPrime(int value) {
+inline bool IsPrime(int value) { // проверка числа на простое/нет
     if (value < 2) {
         return false;
     }
@@ -28,14 +28,18 @@ inline bool IsPrime(int value) {
     return true;
 }
 
-inline Sequence<int>* PrimesInRange(int low, int high) {
+inline bool IsPrimePredicate(int value) { // для where... где нужен предикант
+    return IsPrime(value);
+}
+
+inline Sequence<int>* PrimesInRange(int low, int high) { // сначала Range, потом фильтр через Where
     Sequence<int>* numbers = Range(low, high);
-    Sequence<int>* primes = numbers->Where([](int value) { return IsPrime(value); });
+    Sequence<int>* primes = numbers->Where(IsPrimePredicate);
     delete numbers;
     return primes;
 }
 
-inline Sequence<int>* Factorize(int value) {
+inline Sequence<int>* Factorize(int value) { // все делители числа
     if (value <= 0) {
         throw InvalidArgument("Factorized value must be positive");
     }
@@ -52,7 +56,7 @@ inline Sequence<int>* Factorize(int value) {
     return factors;
 }
 
-inline Sequence<int>* PrimeFactorization(int value) {
+inline Sequence<int>* PrimeFactorization(int value) { // разложение на простые множители
     if (value <= 1) {
         throw InvalidArgument("Value for prime factorization must be greater than 1");
     }
