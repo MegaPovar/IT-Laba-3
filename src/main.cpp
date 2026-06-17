@@ -5,9 +5,7 @@
 
 #include "ArraySequence.hpp"
 #include "Deque.hpp"
-#include "InversionAlgorithms.hpp"
 #include "ListSequence.hpp"
-#include "NumberAlgorithms.hpp"
 #include "Queue.hpp"
 #include "Stack.hpp"
 
@@ -21,10 +19,6 @@ bool IsEvenInt(int value) {
 
 int SumInt(int sum, int value) {
     return sum + value;
-}
-
-bool LessInt(int left, int right) {
-    return left < right;
 }
 
 int ReadInt(const std::string& prompt) { // безопасное чтение целого числа
@@ -55,22 +49,6 @@ int ReadIntInRange(const std::string& prompt, int minimum, int maximum) { // в�
         }
         std::cout << "Input error: enter a number from " << minimum << " to " << maximum << "\n";
     }
-}
-
-template <class T>
-void PrintSequence(const Sequence<T>* sequence) { // печать любой sequence
-    SequenceIterator<T> iterator(*sequence);
-    std::cout << "[";
-    bool first = true;
-    while (iterator.HasValue()) {
-        if (!first) {
-            std::cout << ", ";
-        }
-        std::cout << iterator.Get();
-        first = false;
-        iterator.MoveNext();
-    }
-    std::cout << "]";
 }
 
 template <class T>
@@ -180,7 +158,6 @@ void WorkWithStack(Stack<int>& stack) { // основное меню работ�
         std::cout << "8. Concat with another stack\n";
         std::cout << "9. Substack by indexes\n";
         std::cout << "10. Contains subsequence\n";
-        std::cout << "11. Count inversions\n";
         std::cout << "0. Back\n";
         int choice = ReadInt("Choice: ");
 
@@ -221,11 +198,6 @@ void WorkWithStack(Stack<int>& stack) { // основное меню работ�
                 std::cout << "Enter subsequence\n";
                 Stack<int> candidate = ReadStack();
                 std::cout << (stack.ContainsSubsequence(candidate.AsSequence()) ? "Found" : "Not found") << "\n";
-            } else if (choice == 11) {
-                long long loops = CountInversionsLoops<int>(stack.AsSequence(), LessInt);
-                long long mapReduce = CountInversionsMapReduce<int>(stack.AsSequence(), LessInt);
-                std::cout << "Inversions by loops: " << loops << "\n";
-                std::cout << "Inversions by map-reduce: " << mapReduce << "\n";
             } else if (choice == 0) {
                 running = false;
             } else {
@@ -371,42 +343,6 @@ void WorkWithDeque(Deque<int>& deque) {
     }
 }
 
-void NumberAlgorithmsMenu() { // отдельное меню для A-3
-    bool running = true;
-    while (running) {
-        std::cout << "\nNumber algorithms\n";
-        std::cout << "1. Range\n";
-        std::cout << "2. Primes in range\n";
-        std::cout << "3. Divisors\n";
-        std::cout << "4. Prime factorization\n";
-        std::cout << "0. Back\n";
-        int choice = ReadInt("Choice: ");
-
-        try {
-            if (choice == 1 || choice == 2) {
-                int low = ReadInt("Low: ");
-                int high = ReadInt("High: ");
-                Sequence<int>* result = choice == 1 ? Range(low, high) : PrimesInRange(low, high);
-                PrintSequence(result);
-                std::cout << "\n";
-                delete result;
-            } else if (choice == 3 || choice == 4) {
-                int value = ReadInt("Value: ");
-                Sequence<int>* result = choice == 3 ? Factorize(value) : PrimeFactorization(value);
-                PrintSequence(result);
-                std::cout << "\n";
-                delete result;
-            } else if (choice == 0) {
-                running = false;
-            } else {
-                std::cout << "Unknown command\n";
-            }
-        } catch (const std::exception& error) {
-            std::cout << "Error: " << error.what() << "\n";
-        }
-    }
-}
-
 long long MillisecondsSince(std::chrono::high_resolution_clock::time_point start,
                             std::chrono::high_resolution_clock::time_point end) {
     return std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
@@ -453,23 +389,6 @@ void DemoScenario() { // автоматический показ основны�
     std::cout << "\n";
     std::cout << "Contains this substack: "
               << (stack.ContainsSubsequence(substack.AsSequence()) ? "yes" : "no") << "\n";
-
-    long long loops = CountInversionsLoops<int>(stack.AsSequence(), LessInt);
-    long long mapReduce = CountInversionsMapReduce<int>(stack.AsSequence(), LessInt);
-    std::cout << "Inversions by loops: " << loops << "\n";
-    std::cout << "Inversions by map-reduce: " << mapReduce << "\n";
-
-    Sequence<int>* primes = PrimesInRange(1, 20);
-    std::cout << "Primes in range [1..20]: ";
-    PrintSequence(primes);
-    std::cout << "\n";
-    delete primes;
-
-    Sequence<int>* factors = PrimeFactorization(84);
-    std::cout << "Prime factorization of 84: ";
-    PrintSequence(factors);
-    std::cout << "\n";
-    delete factors;
 
     std::cout << "Queue demo, Dequeue: " << queue.Dequeue() << ", Peek: " << queue.Peek() << "\n";
     deque.PushFront(0);
@@ -575,9 +494,8 @@ int main() { // главное меню программы
         std::cout << "1. Create and test Stack<int>\n";
         std::cout << "2. Create and test Queue<int>\n";
         std::cout << "3. Create and test Deque<int>\n";
-        std::cout << "4. Number algorithms\n";
-        std::cout << "5. Automatic demo\n";
-        std::cout << "6. Benchmark\n";
+        std::cout << "4. Automatic demo\n";
+        std::cout << "5. Benchmark\n";
         std::cout << "0. Exit\n";
         int choice = ReadInt("Choice: ");
 
@@ -592,10 +510,8 @@ int main() { // главное меню программы
                 Deque<int> deque = ReadDeque();
                 WorkWithDeque(deque);
             } else if (choice == 4) {
-                NumberAlgorithmsMenu();
-            } else if (choice == 5) {
                 DemoScenario();
-            } else if (choice == 6) {
+            } else if (choice == 5) {
                 Benchmark();
             } else if (choice == 0) {
                 running = false;

@@ -4,10 +4,8 @@
 
 #include "ArraySequence.hpp"
 #include "Deque.hpp"
-#include "InversionAlgorithms.hpp"
 #include "LinkedList.hpp"
 #include "ListSequence.hpp"
-#include "NumberAlgorithms.hpp"
 #include "Queue.hpp"
 #include "SequenceAlgorithms.hpp"
 #include "Stack.hpp"
@@ -50,10 +48,6 @@ static bool IsLongWord(std::string value) {
 
 static int StringLength(std::string value) {
     return static_cast<int>(value.size());
-}
-
-static bool LessTestInt(int left, int right) {
-    return left < right;
 }
 
 TEST(DynamicArrayTests, BasicOperationsAndErrors) {
@@ -384,86 +378,4 @@ TEST(DequeTests, PushPopBothSidesAndCommonOperations) {
     EXPECT_THROW(empty.PopBack(), IndexOutOfRange);
     EXPECT_THROW(empty.PeekFront(), IndexOutOfRange);
     EXPECT_THROW(empty.PeekBack(), IndexOutOfRange);
-}
-
-TEST(InversionTests, LoopsAndMapReduce) {
-    int source[] = {3, 1, 2, 5, 4};
-    MutableArraySequence<int> sequence(source, 5);
-    std::function<bool(int, int)> less = LessTestInt;
-
-    EXPECT_EQ(CountInversionsLoops<int>(sequence, less), 3);
-    EXPECT_EQ(CountInversionsMapReduce<int>(sequence, less), 3);
-
-    int sortedSource[] = {1, 2, 3, 4};
-    MutableArraySequence<int> sorted(sortedSource, 4);
-    EXPECT_EQ(CountInversionsLoops<int>(sorted, less), 0);
-    EXPECT_EQ(CountInversionsMapReduce<int>(sorted, less), 0);
-
-    int reversedSource[] = {4, 3, 2, 1};
-    MutableListSequence<int> reversed(reversedSource, 4);
-    EXPECT_EQ(CountInversionsLoops<int>(reversed, less), 6);
-    EXPECT_EQ(CountInversionsMapReduce<int>(reversed, less), 6);
-
-    int duplicatesSource[] = {2, 2, 1};
-    MutableArraySequence<int> duplicates(duplicatesSource, 3);
-    EXPECT_EQ(CountInversionsLoops<int>(duplicates, less), 2);
-    EXPECT_EQ(CountInversionsMapReduce<int>(duplicates, less), 2);
-
-    MutableArraySequence<int> empty;
-    EXPECT_EQ(CountInversionsLoops<int>(empty, less), 0);
-    EXPECT_EQ(CountInversionsMapReduce<int>(empty, less), 0);
-}
-
-TEST(NumberAlgorithmTests, RangePrimesAndFactorization) {
-    Sequence<int>* range = Range(3, 6);
-    EXPECT_EQ(range->GetLength(), 4);
-    EXPECT_EQ(range->Get(0), 3);
-    EXPECT_EQ(range->Get(3), 6);
-    delete range;
-
-    Sequence<int>* oneNumber = Range(5, 5);
-    EXPECT_EQ(oneNumber->GetLength(), 1);
-    EXPECT_EQ(oneNumber->GetFirst(), 5);
-    delete oneNumber;
-
-    EXPECT_FALSE(IsPrime(-3));
-    EXPECT_FALSE(IsPrime(0));
-    EXPECT_FALSE(IsPrime(1));
-    EXPECT_TRUE(IsPrime(2));
-    EXPECT_TRUE(IsPrime(97));
-    EXPECT_FALSE(IsPrime(100));
-
-    Sequence<int>* primes = PrimesInRange(1, 10);
-    EXPECT_EQ(primes->GetLength(), 4);
-    EXPECT_EQ(primes->Get(0), 2);
-    EXPECT_EQ(primes->Get(3), 7);
-    delete primes;
-
-    Sequence<int>* noPrimes = PrimesInRange(14, 16);
-    EXPECT_EQ(noPrimes->GetLength(), 0);
-    delete noPrimes;
-
-    Sequence<int>* divisors = Factorize(12);
-    EXPECT_EQ(divisors->GetLength(), 6);
-    EXPECT_EQ(divisors->Get(0), 1);
-    EXPECT_EQ(divisors->Get(1), 12);
-    delete divisors;
-
-    Sequence<int>* primeFactors = PrimeFactorization(84);
-    EXPECT_EQ(primeFactors->GetLength(), 4);
-    EXPECT_EQ(primeFactors->Get(0), 2);
-    EXPECT_EQ(primeFactors->Get(1), 2);
-    EXPECT_EQ(primeFactors->Get(2), 3);
-    EXPECT_EQ(primeFactors->Get(3), 7);
-    delete primeFactors;
-
-    Sequence<int>* primeValue = PrimeFactorization(13);
-    EXPECT_EQ(primeValue->GetLength(), 1);
-    EXPECT_EQ(primeValue->GetFirst(), 13);
-    delete primeValue;
-
-    EXPECT_THROW(delete Range(5, 1), InvalidArgument);
-    EXPECT_THROW(delete Factorize(0), InvalidArgument);
-    EXPECT_THROW(delete Factorize(-10), InvalidArgument);
-    EXPECT_THROW(delete PrimeFactorization(1), InvalidArgument);
 }
