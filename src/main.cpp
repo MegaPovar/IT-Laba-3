@@ -59,29 +59,66 @@ int ReadIntInRange(const std::string& prompt, int minimum, int maximum) { // в�
 
 template <class T>
 void PrintSequence(const Sequence<T>* sequence) { // печать любой sequence
+    SequenceIterator<T> iterator(*sequence);
     std::cout << "[";
-    for (int i = 0; i < sequence->GetLength(); ++i) {
-        if (i > 0) {
+    bool first = true;
+    while (iterator.HasValue()) {
+        if (!first) {
             std::cout << ", ";
         }
-        std::cout << sequence->Get(i);
+        std::cout << iterator.Get();
+        first = false;
+        iterator.MoveNext();
     }
     std::cout << "]";
 }
 
 template <class T>
 void PrintStack(const Stack<T>& stack) { // стек печатаем через внутреннюю sequence
-    PrintSequence(&stack.AsSequence());
+    typename Stack<T>::Iterator iterator = stack.Begin();
+    std::cout << "[";
+    bool first = true;
+    while (iterator.HasValue()) {
+        if (!first) {
+            std::cout << ", ";
+        }
+        std::cout << iterator.Get();
+        first = false;
+        iterator.MoveNext();
+    }
+    std::cout << "]";
 }
 
 template <class T>
 void PrintQueue(const Queue<T>& queue) {
-    PrintSequence(&queue.AsSequence());
+    typename Queue<T>::Iterator iterator = queue.Begin();
+    std::cout << "[";
+    bool first = true;
+    while (iterator.HasValue()) {
+        if (!first) {
+            std::cout << ", ";
+        }
+        std::cout << iterator.Get();
+        first = false;
+        iterator.MoveNext();
+    }
+    std::cout << "]";
 }
 
 template <class T>
 void PrintDeque(const Deque<T>& deque) {
-    PrintSequence(&deque.AsSequence());
+    typename Deque<T>::Iterator iterator = deque.Begin();
+    std::cout << "[";
+    bool first = true;
+    while (iterator.HasValue()) {
+        if (!first) {
+            std::cout << ", ";
+        }
+        std::cout << iterator.Get();
+        first = false;
+        iterator.MoveNext();
+    }
+    std::cout << "]";
 }
 
 Stack<int> ReadStack() { // ввод стека с клавиатуры
@@ -534,7 +571,7 @@ void Benchmark() { // общий запуск замеров производи�
 int main() { // главное меню программы
     bool running = true;
     while (running) {
-        std::cout << "\nLab 3: Stack ADT based on Sequence\n";
+        std::cout << "\nLab 3: Linear containers based on Sequence\n";
         std::cout << "1. Create and test Stack<int>\n";
         std::cout << "2. Create and test Queue<int>\n";
         std::cout << "3. Create and test Deque<int>\n";

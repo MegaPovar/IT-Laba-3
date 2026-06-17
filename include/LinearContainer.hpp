@@ -2,20 +2,13 @@
 
 #include "ArraySequence.hpp"
 #include "Exceptions.hpp"
-#include "ICollection.hpp"
 #include "SequenceAlgorithms.hpp"
+#include "SequenceIterator.hpp"
 
 template <class T>
-class LinearContainer : public ICollection<T> {
+class LinearContainer {
 protected:
-    Sequence<T>* items; // общий контейнер хранит данные как sequence
-
-    explicit LinearContainer(Sequence<T>* sequence, bool takeOwnership) : items(nullptr) {
-        if (sequence == nullptr) {
-            throw InvalidArgument("LinearContainer sequence cannot be null");
-        }
-        items = takeOwnership ? sequence : sequence->Clone();
-    }
+    Sequence<T>* items;
 
     void ReplaceItems(Sequence<T>* next) {
         if (next != items) {
@@ -24,7 +17,7 @@ protected:
         }
     }
 
-    void AppendBack(const T& value) {
+    void AppendBack(const T& value) { // const для переменной и временныхъ значений
         ReplaceItems(items->Append(value));
     }
 
@@ -32,34 +25,70 @@ protected:
         ReplaceItems(items->Prepend(value));
     }
 
-    T RemoveBack() {
+    T RemoveBack() { // [10, 20, 30] = [10, 20], возвращаем 30
         if (IsEmpty()) {
             throw IndexOutOfRange("Container is empty");
         }
         T value = items->GetLast();
-        ReplaceItems(items->Slice(GetCount() - 1, 1));
+        Sequence<T>* next = new MutableArraySequence<T>();
+        SequenceIterator<T> iterator = Begin();
+        while (iterator.HasValue()) {
+            T current = iterator.Get();
+            iterator.MoveNext();
+            if (iterator.HasValue()) {
+                next->Append(current);
+            }
+        }
+        ReplaceItems(next);
         return value;
     }
 
-    T RemoveFront() {
+    T RemoveFront() { // [10, 20, 30] = [20, 30], возвращаем 10
         if (IsEmpty()) {
             throw IndexOutOfRange("Container is empty");
         }
         T value = items->GetFirst();
-        ReplaceItems(items->Slice(0, 1));
+        Sequence<T>* next = new MutableArraySequence<T>();
+        SequenceIterator<T> iterator = Begin();
+        if (iterator.HasValue()) {
+            iterator.MoveNext();
+        }
+        while (iterator.HasValue()) {
+            next->Append(iterator.Get());
+            iterator.MoveNext();
+        }
+        ReplaceItems(next);
         return value;
     }
 
-    Sequence<T>* ConcatToSequence(const LinearContainer<T>& other) const {
-        Sequence<T>* copy = items->Clone();
-        Sequence<T>* result = copy->Concat(other.items);
-        if (result != copy) {
-            delete copy;
+    bool HasSameItems(const LinearContainer<T>& other) const {
+        if (GetCount() != other.GetCount()) {
+            return false;
         }
-        return result;
+        SequenceIterator<T> first = Begin();
+        SequenceIterator<T> second = other.Begin();
+        while (first.HasValue() && second.HasValue()) {
+            if (!(first.Get() == second.Get())) {
+                return false;
+            }
+            first.MoveNext();
+            second.MoveNext();
+        }
+        return true;
+    }
+
+    void CheckSubsequenceIndexes(int startIndex, int endIndex) const {
+        if (startIndex < 0 || endIndex < 0 || startIndex >= GetCount() || endIndex >= GetCount()) {
+            throw IndexOutOfRange("Container subsequence index is out of range");
+        }
+        if (startIndex > endIndex) {
+            throw InvalidArgument("startIndex cannot be greater than endIndex");
+        }
     }
 
 public:
+    typedef SequenceIterator<T> Iterator;
+
     LinearContainer() : items(new MutableArraySequence<T>()) {}
 
     explicit LinearContainer(const Sequence<T>& sequence) : items(sequence.Clone()) {}
@@ -82,20 +111,20 @@ public:
         delete items;
     }
 
-    int GetCount() const override {
+    int GetCount() const {
         return items->GetLength();
-    }
-
-    int GetSize() const {
-        return GetCount();
     }
 
     bool IsEmpty() const {
         return GetCount() == 0;
     }
 
-    T Get(int index) const override {
+    T Get(int index) const {
         return items->Get(index);
+    }
+
+    Iterator Begin() const {
+        return Iterator(*items);
     }
 
     bool ContainsSubsequence(const Sequence<T>& subsequence) const {
@@ -108,12 +137,19 @@ public:
             return false;
         }
         for (int start = 0; start <= sourceLength - subLength; ++start) {
+            SequenceIterator<T> source = Begin();
+            for (int skip = 0; skip < start; ++skip) {
+                source.MoveNext();
+            }
+            SequenceIterator<T> sub(subsequence);
             bool equal = true;
-            for (int offset = 0; offset < subLength; ++offset) {
-                if (!(items->Get(start + offset) == subsequence.Get(offset))) {
+            while (sub.HasValue()) {
+                if (!(source.Get() == sub.Get())) {
                     equal = false;
                     break;
                 }
+                source.MoveNext();
+                sub.MoveNext();
             }
             if (equal) {
                 return true;

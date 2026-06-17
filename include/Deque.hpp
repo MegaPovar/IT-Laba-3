@@ -6,12 +6,6 @@
 
 template <class T>
 class Deque : public LinearContainer<T> {
-private:
-    template <class>
-    friend class Deque;
-
-    explicit Deque(Sequence<T>* sequence, bool takeOwnership) : LinearContainer<T>(sequence, takeOwnership) {}
-
 public:
     Deque() : LinearContainer<T>() {}
     explicit Deque(const Sequence<T>& sequence) : LinearContainer<T>(sequence) {}
@@ -54,24 +48,52 @@ public:
     }
 
     Deque<T> Concat(const Deque<T>& other) const {
-        Sequence<T>* result = this->ConcatToSequence(other);
-        return Deque<T>(result, true);
+        Deque<T> result(*this);
+        typename LinearContainer<T>::Iterator iterator = other.Begin();
+        while (iterator.HasValue()) {
+            result.PushBack(iterator.Get());
+            iterator.MoveNext();
+        }
+        return result;
     }
 
     Deque<T> GetSubdeque(int startIndex, int endIndex) const {
-        Sequence<T>* result = this->items->GetSubsequence(startIndex, endIndex);
-        return Deque<T>(result, true);
+        this->CheckSubsequenceIndexes(startIndex, endIndex);
+        Deque<T> result;
+        typename LinearContainer<T>::Iterator iterator = this->Begin();
+        int position = 0;
+        while (iterator.HasValue()) {
+            if (position >= startIndex && position <= endIndex) {
+                result.PushBack(iterator.Get());
+            }
+            iterator.MoveNext();
+            ++position;
+        }
+        return result;
     }
 
     template <class TResult>
     Deque<TResult> Map(std::function<TResult(T)> mapper) const {
-        Sequence<TResult>* result = this->items->template Map<TResult>(mapper);
-        return Deque<TResult>(result, true);
+        Deque<TResult> result;
+        typename LinearContainer<T>::Iterator iterator = this->Begin();
+        while (iterator.HasValue()) {
+            result.PushBack(mapper(iterator.Get()));
+            iterator.MoveNext();
+        }
+        return result;
     }
 
     Deque<T> Where(std::function<bool(T)> predicate) const {
-        Sequence<T>* result = this->items->Where(predicate);
-        return Deque<T>(result, true);
+        Deque<T> result;
+        typename LinearContainer<T>::Iterator iterator = this->Begin();
+        while (iterator.HasValue()) {
+            T value = iterator.Get();
+            if (predicate(value)) {
+                result.PushBack(value);
+            }
+            iterator.MoveNext();
+        }
+        return result;
     }
 
     Deque<T> operator+(const Deque<T>& other) const {
@@ -79,15 +101,7 @@ public:
     }
 
     bool operator==(const Deque<T>& other) const {
-        if (this->GetSize() != other.GetSize()) {
-            return false;
-        }
-        for (int i = 0; i < this->GetSize(); ++i) {
-            if (!(this->items->Get(i) == other.items->Get(i))) {
-                return false;
-            }
-        }
-        return true;
+        return this->HasSameItems(other);
     }
 
     bool operator!=(const Deque<T>& other) const {

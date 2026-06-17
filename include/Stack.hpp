@@ -6,12 +6,6 @@
 
 template <class T>
 class Stack : public LinearContainer<T> {
-private:
-    template <class>
-    friend class Stack; // для обращения шаблонных классов друг к другу
-
-    explicit Stack(Sequence<T>* sequence, bool takeOwnership) : LinearContainer<T>(sequence, takeOwnership) {} // внутренний конструктор. оборачиваем sequence в стек
-
 public:
     Stack() : LinearContainer<T>() {} // пустой стек
     explicit Stack(const Sequence<T>& sequence) : LinearContainer<T>(sequence) {} // конструктор из sequence для создания стека из любой последовательности
@@ -36,24 +30,52 @@ public:
     }
 
     Stack<T> Concat(const Stack<T>& other) const { 
-        Sequence<T>* result = this->ConcatToSequence(other);
-        return Stack<T>(result, true);
+        Stack<T> result(*this);
+        typename LinearContainer<T>::Iterator iterator = other.Begin();
+        while (iterator.HasValue()) {
+            result.Push(iterator.Get());
+            iterator.MoveNext();
+        }
+        return result;
     }
 
     Stack<T> GetSubstack(int startIndex, int endIndex) const { // кусок стека по индексам
-        Sequence<T>* result = this->items->GetSubsequence(startIndex, endIndex);
-        return Stack<T>(result, true);
+        this->CheckSubsequenceIndexes(startIndex, endIndex);
+        Stack<T> result;
+        typename LinearContainer<T>::Iterator iterator = this->Begin();
+        int position = 0;
+        while (iterator.HasValue()) {
+            if (position >= startIndex && position <= endIndex) {
+                result.Push(iterator.Get());
+            }
+            iterator.MoveNext();
+            ++position;
+        }
+        return result;
     }
 
     template <class TResult>
     Stack<TResult> Map(std::function<TResult(T)> mapper) const { // применить функцию ко всем элементам
-        Sequence<TResult>* result = this->items->template Map<TResult>(mapper);
-        return Stack<TResult>(result, true);
+        Stack<TResult> result;
+        typename LinearContainer<T>::Iterator iterator = this->Begin();
+        while (iterator.HasValue()) {
+            result.Push(mapper(iterator.Get()));
+            iterator.MoveNext();
+        }
+        return result;
     }
 
     Stack<T> Where(std::function<bool(T)> predicate) const { // оставить элементы по условию
-        Sequence<T>* result = this->items->Where(predicate);
-        return Stack<T>(result, true);
+        Stack<T> result;
+        typename LinearContainer<T>::Iterator iterator = this->Begin();
+        while (iterator.HasValue()) {
+            T value = iterator.Get();
+            if (predicate(value)) {
+                result.Push(value);
+            }
+            iterator.MoveNext();
+        }
+        return result;
     }
 
     Stack<T> operator+(const Stack<T>& other) const { //c = a + b вызывая concat
@@ -61,15 +83,7 @@ public:
     }
 
     bool operator==(const Stack<T>& other) const { // сравнение поэлементно
-        if (this->GetSize() != other.GetSize()) {
-            return false;
-        }
-        for (int i = 0; i < this->GetSize(); ++i) {
-            if (!(this->items->Get(i) == other.items->Get(i))) {
-                return false;
-            }
-        }
-        return true;
+        return this->HasSameItems(other);
     }
 
     bool operator!=(const Stack<T>& other) const { // обратное к ==

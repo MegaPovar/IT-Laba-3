@@ -1,14 +1,17 @@
 #pragma once
 
 #include "ArraySequence.hpp"
+#include "SequenceIterator.hpp"
 
 template <class T, class TSelf>
 template <class TResult>
 Sequence<TResult>* SequenceOperations<T, TSelf>::Map(std::function<TResult(T)> mapper) const { // применяем mapper к каждому элементу
     const TSelf& sequence = static_cast<const TSelf&>(*this); // CRTP: берем настоящий тип
     Sequence<TResult>* result = new MutableArraySequence<TResult>(); // результат может быть другого типа
-    for (int i = 0; i < sequence.GetLength(); ++i) {
-        result->Append(mapper(sequence.Get(i)));
+    SequenceIterator<T> iterator(sequence);
+    while (iterator.HasValue()) {
+        result->Append(mapper(iterator.Get()));
+        iterator.MoveNext();
     }
     return result;
 }
@@ -18,8 +21,12 @@ template <class TResult>
 Sequence<TResult>* SequenceOperations<T, TSelf>::MapIndexed(std::function<TResult(T, int)> mapper) const { // map + индекс 
     const TSelf& sequence = static_cast<const TSelf&>(*this);
     Sequence<TResult>* result = new MutableArraySequence<TResult>();
-    for (int i = 0; i < sequence.GetLength(); ++i) {
-        result->Append(mapper(sequence.Get(i), i));
+    SequenceIterator<T> iterator(sequence);
+    int index = 0;
+    while (iterator.HasValue()) {
+        result->Append(mapper(iterator.Get(), index));
+        iterator.MoveNext();
+        ++index;
     }
     return result;
 }
@@ -28,11 +35,13 @@ template <class T, class TSelf>
 Sequence<T>* SequenceOperations<T, TSelf>::Where(std::function<bool(T)> predicate) const { // фильтр по условию (потом %2 )
     const TSelf& sequence = static_cast<const TSelf&>(*this);
     Sequence<T>* result = new MutableArraySequence<T>();
-    for (int i = 0; i < sequence.GetLength(); ++i) {
-        T value = sequence.Get(i);
+    SequenceIterator<T> iterator(sequence);
+    while (iterator.HasValue()) {
+        T value = iterator.Get();
         if (predicate(value)) {
             result->Append(value);
         }
+        iterator.MoveNext();
     }
     return result;
 }
@@ -42,8 +51,10 @@ template <class TResult>
 TResult SequenceOperations<T, TSelf>::Reduce(std::function<TResult(TResult, T)> reducer, TResult start) const { // свертка в одно значение
     const TSelf& sequence = static_cast<const TSelf&>(*this);
     TResult result = start; // начальное значение
-    for (int i = 0; i < sequence.GetLength(); ++i) {
-        result = reducer(result, sequence.Get(i));
+    SequenceIterator<T> iterator(sequence);
+    while (iterator.HasValue()) {
+        result = reducer(result, iterator.Get());
+        iterator.MoveNext();
     }
     return result;
 }
@@ -53,12 +64,16 @@ template <class TResult>
 Sequence<TResult>* SequenceOperations<T, TSelf>::FlatMap(std::function<Sequence<TResult>*(T)> mapper) const { // каждый элемент дает последовательность
     const TSelf& sequence = static_cast<const TSelf&>(*this);
     Sequence<TResult>* result = new MutableArraySequence<TResult>(); 
-    for (int i = 0; i < sequence.GetLength(); ++i) {
-        Sequence<TResult>* part = mapper(sequence.Get(i)); // временная часть результата
-        for (int j = 0; j < part->GetLength(); ++j) {
-            result->Append(part->Get(j));
+    SequenceIterator<T> iterator(sequence);
+    while (iterator.HasValue()) {
+        Sequence<TResult>* part = mapper(iterator.Get()); // временная часть результата
+        SequenceIterator<TResult> partIterator(*part);
+        while (partIterator.HasValue()) {
+            result->Append(partIterator.Get());
+            partIterator.MoveNext();
         }
         delete part; // удаляем временную часть, так как она уже склеена в результат
+        iterator.MoveNext();
     }
     return result;
 }
@@ -66,11 +81,13 @@ Sequence<TResult>* SequenceOperations<T, TSelf>::FlatMap(std::function<Sequence<
 template <class T, class TSelf>
 Option<T> SequenceOperations<T, TSelf>::TryGetFirst(std::function<bool(T)> predicate) const { // найти первый подходящий через Option слева направо
     const TSelf& sequence = static_cast<const TSelf&>(*this);
-    for (int i = 0; i < sequence.GetLength(); ++i) {
-        T value = sequence.Get(i);
+    SequenceIterator<T> iterator(sequence);
+    while (iterator.HasValue()) {
+        T value = iterator.Get();
         if (!predicate || predicate(value)) {
             return Option<T>::Some(value);
         }
+        iterator.MoveNext();
     }
     return Option<T>::None();
 }
@@ -78,13 +95,16 @@ Option<T> SequenceOperations<T, TSelf>::TryGetFirst(std::function<bool(T)> predi
 template <class T, class TSelf>
 Option<T> SequenceOperations<T, TSelf>::TryGetLast(std::function<bool(T)> predicate) const { // найти последний через Option
     const TSelf& sequence = static_cast<const TSelf&>(*this);
-    for (int i = sequence.GetLength() - 1; i >= 0; --i) {
-        T value = sequence.Get(i);
+    Option<T> result = Option<T>::None();
+    SequenceIterator<T> iterator(sequence);
+    while (iterator.HasValue()) {
+        T value = iterator.Get();
         if (!predicate || predicate(value)) {
-            return Option<T>::Some(value);
+            result = Option<T>::Some(value);
         }
+        iterator.MoveNext();
     }
-    return Option<T>::None();
+    return result;
 }
 
 template <class T, class TSelf>
@@ -93,14 +113,16 @@ Sequence<Sequence<T>*>* SequenceOperations<T, TSelf>::Split(std::function<bool(T
     Sequence<Sequence<T>*>* result = new MutableArraySequence<Sequence<T>*>(); // список кусков
     Sequence<T>* current = new MutableArraySequence<T>(); // текущий кусок
 
-    for (int i = 0; i < sequence.GetLength(); ++i) {
-        T value = sequence.Get(i);
+    SequenceIterator<T> iterator(sequence);
+    while (iterator.HasValue()) {
+        T value = iterator.Get();
         if (separator(value)) {
             result->Append(current);
             current = new MutableArraySequence<T>(); // начинаем новый кусок
         } else {
             current->Append(value);
         }
+        iterator.MoveNext();
     }
     result->Append(current);
     return result;
@@ -128,16 +150,28 @@ Sequence<T>* SequenceOperations<T, TSelf>::Slice(int index, int count, const Seq
     }
 
     Sequence<T>* result = new MutableArraySequence<T>(); // новая последовательность результата
-    for (int i = 0; i < start; ++i) {
-        result->Append(sequence.Get(i));
-    }
-    if (inserted != nullptr) { // если есть что вставить
-        for (int i = 0; i < inserted->GetLength(); ++i) {
-            result->Append(inserted->Get(i));
+    SequenceIterator<T> iterator(sequence);
+    int position = 0;
+    while (iterator.HasValue()) {
+        if (position == start && inserted != nullptr) { // если есть что вставить
+            SequenceIterator<T> insertedIterator(*inserted);
+            while (insertedIterator.HasValue()) {
+                result->Append(insertedIterator.Get());
+                insertedIterator.MoveNext();
+            }
         }
+        if (position < start || position >= start + count) {
+            result->Append(iterator.Get());
+        }
+        iterator.MoveNext();
+        ++position;
     }
-    for (int i = start + count; i < length; ++i) {
-        result->Append(sequence.Get(i));
+    if (start == length && inserted != nullptr) {
+        SequenceIterator<T> insertedIterator(*inserted);
+        while (insertedIterator.HasValue()) {
+            result->Append(insertedIterator.Get());
+            insertedIterator.MoveNext();
+        }
     }
     return result;
 }
@@ -151,8 +185,14 @@ Sequence<std::pair<T, T> >* Zip(const Sequence<T>* first, const Sequence<T>* sec
         length = second->GetLength();
     }
     Sequence<std::pair<T, T> >* result = new MutableArraySequence<std::pair<T, T> >(); // pair = пара значений
-    for (int i = 0; i < length; ++i) {
-        result->Append(std::make_pair(first->Get(i), second->Get(i)));
+    SequenceIterator<T> firstIterator(*first);
+    SequenceIterator<T> secondIterator(*second);
+    int count = 0;
+    while (count < length) {
+        result->Append(std::make_pair(firstIterator.Get(), secondIterator.Get()));
+        firstIterator.MoveNext();
+        secondIterator.MoveNext();
+        ++count;
     }
     return result;
 }

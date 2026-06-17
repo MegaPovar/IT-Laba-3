@@ -6,12 +6,6 @@
 
 template <class T>
 class Queue : public LinearContainer<T> {
-private:
-    template <class>
-    friend class Queue;
-
-    explicit Queue(Sequence<T>* sequence, bool takeOwnership) : LinearContainer<T>(sequence, takeOwnership) {}
-
 public:
     Queue() : LinearContainer<T>() {}
     explicit Queue(const Sequence<T>& sequence) : LinearContainer<T>(sequence) {}
@@ -36,24 +30,52 @@ public:
     }
 
     Queue<T> Concat(const Queue<T>& other) const {
-        Sequence<T>* result = this->ConcatToSequence(other);
-        return Queue<T>(result, true);
+        Queue<T> result(*this);
+        typename LinearContainer<T>::Iterator iterator = other.Begin();
+        while (iterator.HasValue()) {
+            result.Enqueue(iterator.Get());
+            iterator.MoveNext();
+        }
+        return result;
     }
 
     Queue<T> GetSubqueue(int startIndex, int endIndex) const {
-        Sequence<T>* result = this->items->GetSubsequence(startIndex, endIndex);
-        return Queue<T>(result, true);
+        this->CheckSubsequenceIndexes(startIndex, endIndex);
+        Queue<T> result;
+        typename LinearContainer<T>::Iterator iterator = this->Begin();
+        int position = 0;
+        while (iterator.HasValue()) {
+            if (position >= startIndex && position <= endIndex) {
+                result.Enqueue(iterator.Get());
+            }
+            iterator.MoveNext();
+            ++position;
+        }
+        return result;
     }
 
     template <class TResult>
     Queue<TResult> Map(std::function<TResult(T)> mapper) const {
-        Sequence<TResult>* result = this->items->template Map<TResult>(mapper);
-        return Queue<TResult>(result, true);
+        Queue<TResult> result;
+        typename LinearContainer<T>::Iterator iterator = this->Begin();
+        while (iterator.HasValue()) {
+            result.Enqueue(mapper(iterator.Get()));
+            iterator.MoveNext();
+        }
+        return result;
     }
 
     Queue<T> Where(std::function<bool(T)> predicate) const {
-        Sequence<T>* result = this->items->Where(predicate);
-        return Queue<T>(result, true);
+        Queue<T> result;
+        typename LinearContainer<T>::Iterator iterator = this->Begin();
+        while (iterator.HasValue()) {
+            T value = iterator.Get();
+            if (predicate(value)) {
+                result.Enqueue(value);
+            }
+            iterator.MoveNext();
+        }
+        return result;
     }
 
     Queue<T> operator+(const Queue<T>& other) const {
@@ -61,15 +83,7 @@ public:
     }
 
     bool operator==(const Queue<T>& other) const {
-        if (this->GetSize() != other.GetSize()) {
-            return false;
-        }
-        for (int i = 0; i < this->GetSize(); ++i) {
-            if (!(this->items->Get(i) == other.items->Get(i))) {
-                return false;
-            }
-        }
-        return true;
+        return this->HasSameItems(other);
     }
 
     bool operator!=(const Queue<T>& other) const {

@@ -215,6 +215,24 @@ TEST(LinearContainerTests, CommonBehaviorThroughStack) {
     EXPECT_FALSE(emptyStack.ContainsSubsequence(middle));
 }
 
+TEST(LinearContainerTests, IteratorPassesThroughItems) {
+    int source[] = {4, 5, 6};
+    Stack<int> stack(source, 3);
+
+    Stack<int>::Iterator iterator = stack.Begin();
+    int sum = 0;
+    int count = 0;
+    while (iterator.HasValue()) {
+        sum += iterator.Get();
+        ++count;
+        iterator.MoveNext();
+    }
+
+    EXPECT_EQ(count, 3);
+    EXPECT_EQ(sum, 15);
+    EXPECT_THROW(iterator.Get(), IndexOutOfRange);
+}
+
 TEST(StackTests, PushPopMapWhereReduceAndOperators) {
     Stack<int> stack;
     EXPECT_TRUE(stack.IsEmpty());
@@ -222,7 +240,7 @@ TEST(StackTests, PushPopMapWhereReduceAndOperators) {
     stack.Push(20);
     stack.Push(30);
 
-    EXPECT_EQ(stack.GetSize(), 3);
+    EXPECT_EQ(stack.GetCount(), 3);
     EXPECT_EQ(stack.GetCount(), 3);
     EXPECT_EQ(stack.Get(1), 20);
     EXPECT_EQ(stack.Peek(), 30);
@@ -239,7 +257,7 @@ TEST(StackTests, PushPopMapWhereReduceAndOperators) {
     EXPECT_EQ(mapped.Get(1), 40);
 
     Stack<int> filtered = copy.Where(AtLeastTwenty); // фильтрация
-    EXPECT_EQ(filtered.GetSize(), 2);
+    EXPECT_EQ(filtered.GetCount(), 2);
     EXPECT_EQ(filtered.Get(0), 20);
     EXPECT_EQ(filtered.Get(1), 40);
 
@@ -247,12 +265,12 @@ TEST(StackTests, PushPopMapWhereReduceAndOperators) {
     EXPECT_EQ(sum, 70);
 
     Stack<int> concatenated = stack + filtered;
-    EXPECT_EQ(concatenated.GetSize(), 4);
+    EXPECT_EQ(concatenated.GetCount(), 4);
     EXPECT_EQ(concatenated.Get(0), 10);
     EXPECT_EQ(concatenated.Get(3), 40);
 
     Stack<int> sub = concatenated.GetSubstack(1, 2);
-    EXPECT_EQ(sub.GetSize(), 2);
+    EXPECT_EQ(sub.GetCount(), 2);
     EXPECT_EQ(sub.Get(0), 20);
     EXPECT_EQ(sub.Get(1), 20);
     EXPECT_TRUE(concatenated.ContainsSubsequence(sub.AsSequence()));
@@ -278,7 +296,7 @@ TEST(StackTests, WorksWithDifferentStorageAndStringType) {
     Stack<int> immutableStack(immutableSequence);
     immutableStack.Push(4);
     EXPECT_EQ(immutableSequence.GetLength(), 3);
-    EXPECT_EQ(immutableStack.GetSize(), 4);
+    EXPECT_EQ(immutableStack.GetCount(), 4);
 
     Stack<int> assigned;
     assigned.Push(100);
@@ -296,7 +314,7 @@ TEST(StackTests, WorksWithDifferentStorageAndStringType) {
     EXPECT_EQ(words.Peek(), "three");
 
     Stack<std::string> longWords = words.Where(IsLongWord);
-    EXPECT_EQ(longWords.GetSize(), 1);
+    EXPECT_EQ(longWords.GetCount(), 1);
     EXPECT_EQ(longWords.Peek(), "three");
 
     Stack<int> lengths = words.Map<int>(StringLength);
