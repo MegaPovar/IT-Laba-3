@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include "DynamicArray.hpp"
 #include "Sequence.hpp"
 
@@ -28,7 +29,7 @@ protected:
 
     ArraySequenceBase<T>* InsertInternal(const T& item, int index) { // вставка в массив по индексу
         if (index < 0 || index > items.GetSize()) {
-            throw IndexOutOfRange("ArraySequence insert index is out of range");
+            throw std::out_of_range("ArraySequence insert index is out of range");
         }
         items.Resize(items.GetSize() + 1);
         for (int i = items.GetSize() - 1; i > index; --i) {
@@ -45,53 +46,63 @@ public:
 
     T GetFirst() const override { // первый элемент
         if (GetLength() == 0) {
-            throw IndexOutOfRange("ArraySequence is empty");
+            throw std::out_of_range("ArraySequence is empty");
         }
         return items.Get(0);
     }
 
     T GetLast() const override { // последний элемент
         if (GetLength() == 0) {
-            throw IndexOutOfRange("ArraySequence is empty");
+            throw std::out_of_range("ArraySequence is empty");
         }
         return items.Get(GetLength() - 1);
     }
 
-    T Get(int index) const override { // получить элемент через DynamicArray
+    T Get(int index) const override
+    { // получить элемент через DynamicArray
         return items.Get(index);
     }
 
-    int GetLength() const override { // длина = размер массива
+    int GetLength() const override
+    { // длина = размер массива
         return items.GetSize();
     }
 
-    Sequence<T>* GetSubsequence(int startIndex, int endIndex) const override { // получить кусок [startIndex; endIndex]
-        if (startIndex < 0 || endIndex < 0 || startIndex >= GetLength() || endIndex >= GetLength()) {
-            throw IndexOutOfRange("ArraySequence subsequence index is out of range");
+    Sequence<T> *GetSubsequence(int startIndex, int endIndex) const override
+    { // получить кусок [startIndex; endIndex]
+        if (startIndex < 0 || endIndex < 0 || startIndex >= GetLength() || endIndex >= GetLength())
+        {
+            throw std::out_of_range("ArraySequence subsequence index is out of range");
         }
-        if (startIndex > endIndex) {
-            throw InvalidArgument("startIndex cannot be greater than endIndex");
+        if (startIndex > endIndex)
+        {
+            throw std::invalid_argument("startIndex cannot be greater than endIndex");
         }
-        ArraySequenceBase<T>* result = NewEmpty(); // новый пустой результат
-        for (int i = startIndex; i <= endIndex; ++i) {
+        ArraySequenceBase<T> *result = NewEmpty(); // новый пустой результат
+        for (int i = startIndex; i <= endIndex; ++i)
+        {
             result->AppendInternal(Get(i));
         }
         return result;
     }
 
-    Sequence<T>* Append(const T& item) override { // снаружи сначала берем Instance()
+    Sequence<T> *Append(const T &item) override
+    { // снаружи сначала берем Instance()
         return Instance()->AppendInternal(item);
     }
 
-    Sequence<T>* Prepend(const T& item) override {
+    Sequence<T> *Prepend(const T &item) override
+    {
         return Instance()->PrependInternal(item);
     }
 
-    Sequence<T>* InsertAt(const T& item, int index) override {
+    Sequence<T> *InsertAt(const T &item, int index) override
+    {
         return Instance()->InsertInternal(item, index);
     }
 
-    Sequence<T>* Concat(const Sequence<T>* list) override {
+    Sequence<T> *Concat(const Sequence<T> *list) override
+    {
         ArraySequenceBase<T>* result = Instance();
         for (int i = 0; i < list->GetLength(); ++i) {
             result->AppendInternal(list->Get(i));

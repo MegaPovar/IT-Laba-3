@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Exceptions.hpp"
+#include <stdexcept>
 
 template <class T>
 class LinkedList {
@@ -18,7 +18,7 @@ private:
 
     void CheckIndex(int index) const {
         if (index < 0 || index >= length) {
-            throw IndexOutOfRange("LinkedList index is out of range");
+            throw std::out_of_range("LinkedList index is out of range");
         }
     }
 
@@ -45,7 +45,7 @@ public:
 
         T Get() const {
             if (current == nullptr) {
-                throw IndexOutOfRange("Iterator is out of range");
+                throw std::out_of_range("Iterator is out of range");
             }
             return current->value;
         }
@@ -61,7 +61,7 @@ public:
 
     LinkedList(T* items, int count) : LinkedList() {
         if (count < 0) {
-            throw InvalidArgument("LinkedList length cannot be negative");
+            throw std::invalid_argument("LinkedList length cannot be negative");
         }
         for (int i = 0; i < count; ++i) {
             Append(items[i]); // добавили в конец
@@ -107,14 +107,14 @@ public:
 
     T GetFirst() const {
         if (length == 0) {
-            throw IndexOutOfRange("LinkedList is empty");
+            throw std::out_of_range("LinkedList is empty");
         }
         return head->value;
     }
 
     T GetLast() const {
         if (length == 0) {
-            throw IndexOutOfRange("LinkedList is empty");
+            throw std::out_of_range("LinkedList is empty");
         }
         return tail->value;
     }
@@ -131,7 +131,7 @@ public:
         CheckIndex(startIndex);
         CheckIndex(endIndex);
         if (startIndex > endIndex) {
-            throw InvalidArgument("startIndex cannot be greater than endIndex");
+            throw std::invalid_argument("startIndex cannot be greater than endIndex");
         }
         LinkedList<T>* result = new LinkedList<T>(); // создаем новый 
         Iterator iterator = Begin();
@@ -173,7 +173,7 @@ public:
 
     void InsertAt(const T& item, int index) { // вставка по индексу
         if (index < 0 || index > length) {
-            throw IndexOutOfRange("LinkedList insert index is out of range");
+            throw std::out_of_range("LinkedList insert index is out of range");
         }
         if (index == 0) { // в начало
             Prepend(item);

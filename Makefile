@@ -4,6 +4,7 @@ GTEST_DIR = build/googletest
 GTEST_INCLUDE = -I$(GTEST_DIR)/googletest/include -I$(GTEST_DIR)/googletest
 GTEST_SRC = $(GTEST_DIR)/googletest/src/gtest-all.cc
 GTEST_MAIN = $(GTEST_DIR)/googletest/src/gtest_main.cc
+TEST_SOURCES = $(wildcard tests/*.cpp)
 
 .PHONY: all test run clean
 
@@ -16,8 +17,8 @@ $(GTEST_SRC):
 	mkdir -p build
 	git clone --depth 1 --branch v1.14.0 https://github.com/google/googletest.git $(GTEST_DIR)
 
-tests_runner: tests/tests.cpp $(GTEST_SRC)
-	$(CXX) $(CXXFLAGS) $(GTEST_INCLUDE) tests/tests.cpp $(GTEST_SRC) $(GTEST_MAIN) -pthread -o tests_runner
+tests_runner: $(TEST_SOURCES) $(GTEST_SRC)
+	$(CXX) $(CXXFLAGS) $(GTEST_INCLUDE) $(TEST_SOURCES) $(GTEST_SRC) $(GTEST_MAIN) -pthread -o tests_runner
 
 test: tests_runner
 	./tests_runner

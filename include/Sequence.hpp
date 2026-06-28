@@ -3,8 +3,6 @@
 #include <functional>
 #include <utility>
 
-#include "Option.hpp"
-
 template <class T>
 class Sequence;
 
@@ -25,8 +23,6 @@ public:
     template <class TResult>
     Sequence<TResult>* FlatMap(std::function<Sequence<TResult>*(T)> mapper) const; // map + склеивание
 
-    Option<T> TryGetFirst(std::function<bool(T)> predicate = nullptr) const;
-    Option<T> TryGetLast(std::function<bool(T)> predicate = nullptr) const;
     Sequence<Sequence<T>*>* Split(std::function<bool(T)> separator) const; // разбить на куски
     Sequence<T>* Slice(int index, int count, const Sequence<T>* inserted = nullptr) const; // удалить кусок и вставить другой
 };

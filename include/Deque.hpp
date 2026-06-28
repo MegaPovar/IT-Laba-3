@@ -1,8 +1,7 @@
 #pragma once
 
-#include <functional>
-
 #include "LinearContainer.hpp"
+#include <stdexcept>
 
 template <class T>
 class Deque : public LinearContainer<T> {
@@ -21,28 +20,28 @@ public:
 
     T PopFront() {
         if (this->IsEmpty()) {
-            throw IndexOutOfRange("Deque is empty");
+            throw std::out_of_range("Deque is empty");
         }
         return this->RemoveFront();
     }
 
     T PopBack() {
         if (this->IsEmpty()) {
-            throw IndexOutOfRange("Deque is empty");
+            throw std::out_of_range("Deque is empty");
         }
         return this->RemoveBack();
     }
 
     T PeekFront() const {
         if (this->IsEmpty()) {
-            throw IndexOutOfRange("Deque is empty");
+            throw std::out_of_range("Deque is empty");
         }
         return this->items->GetFirst();
     }
 
     T PeekBack() const {
         if (this->IsEmpty()) {
-            throw IndexOutOfRange("Deque is empty");
+            throw std::out_of_range("Deque is empty");
         }
         return this->items->GetLast();
     }

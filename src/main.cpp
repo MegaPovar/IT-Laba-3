@@ -1,13 +1,11 @@
-#include <chrono>
 #include <iostream>
 #include <sstream>
 #include <string>
 
-#include "ArraySequence.hpp"
 #include "Deque.hpp"
-#include "ListSequence.hpp"
 #include "Queue.hpp"
 #include "Stack.hpp"
+#include "stdexcept"
 
 int SquareInt(int value) {
     return value * value;
@@ -27,7 +25,7 @@ int ReadInt(const std::string& prompt) { // безопасное чтение ц
 
         std::string line;
         if (!std::getline(std::cin, line)) {
-            throw InvalidArgument("Input stream was closed");
+            throw std::invalid_argument("Input stream was closed");
         }
 
         std::istringstream input(line);
@@ -38,16 +36,6 @@ int ReadInt(const std::string& prompt) { // безопасное чтение ц
         }
 
         std::cout << "Input error: enter an integer number\n";
-    }
-}
-
-int ReadIntInRange(const std::string& prompt, int minimum, int maximum) { // ввод числа с ограничениями
-    while (true) {
-        int value = ReadInt(prompt);
-        if (value >= minimum && value <= maximum) {
-            return value;
-        }
-        std::cout << "Input error: enter a number from " << minimum << " to " << maximum << "\n";
     }
 }
 
@@ -102,7 +90,7 @@ void PrintDeque(const Deque<T>& deque) {
 Stack<int> ReadStack() { // ввод стека с клавиатуры
     int count = ReadInt("Count: ");
     if (count < 0) {
-        throw InvalidArgument("Count cannot be negative");
+        throw std::invalid_argument("Count cannot be negative");
     }
 
     Stack<int> stack;
@@ -117,7 +105,7 @@ Stack<int> ReadStack() { // ввод стека с клавиатуры
 Queue<int> ReadQueue() {
     int count = ReadInt("Count: ");
     if (count < 0) {
-        throw InvalidArgument("Count cannot be negative");
+        throw std::invalid_argument("Count cannot be negative");
     }
 
     Queue<int> queue;
@@ -132,7 +120,7 @@ Queue<int> ReadQueue() {
 Deque<int> ReadDeque() {
     int count = ReadInt("Count: ");
     if (count < 0) {
-        throw InvalidArgument("Count cannot be negative");
+        throw std::invalid_argument("Count cannot be negative");
     }
 
     Deque<int> deque;
@@ -343,11 +331,6 @@ void WorkWithDeque(Deque<int>& deque) {
     }
 }
 
-long long MillisecondsSince(std::chrono::high_resolution_clock::time_point start,
-                            std::chrono::high_resolution_clock::time_point end) {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-}
-
 void DemoScenario() { // автоматический показ основных возможностей
     int source[] = {3, 1, 2, 5, 4};
     Stack<int> stack(source, 5);
@@ -398,95 +381,6 @@ void DemoScenario() { // автоматический показ основны�
     std::cout << "\n";
 }
 
-template <class TSequence>
-long long BenchmarkAppend(int count) { // скорость добавления в конец
-    TSequence sequence;
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < count; ++i) {
-        sequence.Append(i);
-    }
-    auto end = std::chrono::high_resolution_clock::now();
-    return MillisecondsSince(start, end);
-}
-
-template <class TSequence>
-long long BenchmarkInsertMiddle(int initialCount, int insertCount) { // вставка в середину
-    TSequence sequence;
-    for (int i = 0; i < initialCount; ++i) {
-        sequence.Append(i);
-    }
-
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < insertCount; ++i) {
-        sequence.InsertAt(-1, sequence.GetLength() / 2);
-    }
-    auto end = std::chrono::high_resolution_clock::now();
-    return MillisecondsSince(start, end);
-}
-
-template <class TSequence>
-long long BenchmarkIndexedRead(int count) { // чтение по индексам
-    TSequence sequence;
-    for (int i = 0; i < count; ++i) {
-        sequence.Append(i);
-    }
-
-    long long checksum = 0;
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < count; ++i) {
-        checksum += sequence.Get(i);
-    }
-    auto end = std::chrono::high_resolution_clock::now();
-
-    if (checksum == -1) { // чтобы компилятор не выкинул цикл как ненужный
-        std::cout << "";
-    }
-    return MillisecondsSince(start, end);
-}
-
-void Benchmark() { // общий запуск замеров производительности
-    std::cout << "\nBenchmark settings\n";
-    int stackCount = ReadIntInRange("Stack Push/Pop count [1..5000]: ", 1, 5000);
-    int appendCount = ReadIntInRange("Sequence Append count [1..100000]: ", 1, 100000);
-    int readCount = ReadIntInRange("Indexed read count [1..20000]: ", 1, 20000);
-    int initialCount = ReadIntInRange("Initial size for InsertAt [1..20000]: ", 1, 20000);
-    int insertCount = ReadIntInRange("InsertAt count [1..5000]: ", 1, 5000);
-
-    Stack<int> stack;
-
-    auto startPush = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < stackCount; ++i) {
-        stack.Push(i);
-    }
-    auto endPush = std::chrono::high_resolution_clock::now();
-
-    auto startPop = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < stackCount; ++i) {
-        stack.Pop();
-    }
-    auto endPop = std::chrono::high_resolution_clock::now();
-
-    std::cout << "\nStack ADT benchmark\n";
-    std::cout << "Push " << stackCount << " items: " << MillisecondsSince(startPush, endPush) << " ms\n";
-    std::cout << "Pop " << stackCount << " items: " << MillisecondsSince(startPop, endPop) << " ms\n";
-
-    std::cout << "\nSequence storage implementations benchmark\n";
-    std::cout << "Append " << appendCount << " items\n";
-    std::cout << "ArraySequence: " << BenchmarkAppend<MutableArraySequence<int> >(appendCount) << " ms\n";
-    std::cout << "ListSequence: " << BenchmarkAppend<MutableListSequence<int> >(appendCount) << " ms\n";
-
-    std::cout << "\nIndexed read " << readCount << " items\n";
-    std::cout << "ArraySequence: " << BenchmarkIndexedRead<MutableArraySequence<int> >(readCount) << " ms\n";
-    std::cout << "ListSequence: " << BenchmarkIndexedRead<MutableListSequence<int> >(readCount) << " ms\n";
-
-    std::cout << "\nInsertAt middle " << insertCount
-              << " times, initial length " << initialCount << "\n";
-    std::cout << "ArraySequence: "
-              << BenchmarkInsertMiddle<MutableArraySequence<int> >(initialCount, insertCount) << " ms\n";
-    std::cout << "ListSequence: "
-              << BenchmarkInsertMiddle<MutableListSequence<int> >(initialCount, insertCount) << " ms\n";
-}
-
 int main() { // главное меню программы
     bool running = true;
     while (running) {
@@ -495,7 +389,6 @@ int main() { // главное меню программы
         std::cout << "2. Create and test Queue<int>\n";
         std::cout << "3. Create and test Deque<int>\n";
         std::cout << "4. Automatic demo\n";
-        std::cout << "5. Benchmark\n";
         std::cout << "0. Exit\n";
         int choice = ReadInt("Choice: ");
 
@@ -511,8 +404,6 @@ int main() { // главное меню программы
                 WorkWithDeque(deque);
             } else if (choice == 4) {
                 DemoScenario();
-            } else if (choice == 5) {
-                Benchmark();
             } else if (choice == 0) {
                 running = false;
             } else {

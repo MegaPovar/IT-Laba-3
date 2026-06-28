@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include "LinkedList.hpp"
 #include "Sequence.hpp"
 
@@ -49,10 +50,10 @@ public:
 
     Sequence<T>* GetSubsequence(int startIndex, int endIndex) const override { // кусок последовательности
         if (startIndex < 0 || endIndex < 0 || startIndex >= GetLength() || endIndex >= GetLength()) {
-            throw IndexOutOfRange("ListSequence subsequence index is out of range");
+            throw std::out_of_range("Subsequence indices are out of range");    
         }
         if (startIndex > endIndex) {
-            throw InvalidArgument("startIndex cannot be greater than endIndex");
+            throw std::invalid_argument("startIndex cannot be greater than endIndex");
         }
 
         ListSequenceBase<T>* result = NewEmpty(); // результат нужного типа

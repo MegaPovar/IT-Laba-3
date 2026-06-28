@@ -1,36 +1,46 @@
 #pragma once
 
-#include "ArraySequence.hpp"
-#include "Exceptions.hpp"
+#include <stdexcept>
+#include "ListSequence.hpp"
 #include "SequenceAlgorithms.hpp"
 #include "SequenceIterator.hpp"
 
-template <class T>
+template <class T> //произвольный тип данных 
 class LinearContainer {
 protected:
-    Sequence<T>* items;
+    MutableListSequence<T>* items;
 
-    void ReplaceItems(Sequence<T>* next) {
+    void ReplaceItems(MutableListSequence<T>* next) {
         if (next != items) {
             delete items;
             items = next;
         }
     }
 
-    void AppendBack(const T& value) { // const для переменной и временныхъ значений
-        ReplaceItems(items->Append(value));
+    MutableListSequence<T>* CopyToListSequence(const Sequence<T>& sequence) const {
+        MutableListSequence<T>* result = new MutableListSequence<T>();
+        SequenceIterator<T> iterator(sequence);
+        while (iterator.HasValue()) {
+            result->Append(iterator.Get());
+            iterator.MoveNext();
+        }
+        return result;
+    }
+
+    void AppendBack(const T& value) { // const для переменной и временных значений
+        items->Append(value);
     }
 
     void PrependFront(const T& value) {
-        ReplaceItems(items->Prepend(value));
+        items->Prepend(value);
     }
 
     T RemoveBack() { // [10, 20, 30] = [10, 20], возвращаем 30
         if (IsEmpty()) {
-            throw IndexOutOfRange("Container is empty");
+            throw std::out_of_range("Container is empty");
         }
         T value = items->GetLast();
-        Sequence<T>* next = new MutableArraySequence<T>();
+        MutableListSequence<T>* next = new MutableListSequence<T>();
         SequenceIterator<T> iterator = Begin();
         while (iterator.HasValue()) {
             T current = iterator.Get();
@@ -45,10 +55,10 @@ protected:
 
     T RemoveFront() { // [10, 20, 30] = [20, 30], возвращаем 10
         if (IsEmpty()) {
-            throw IndexOutOfRange("Container is empty");
+            throw std::out_of_range("Container is empty");
         }
         T value = items->GetFirst();
-        Sequence<T>* next = new MutableArraySequence<T>();
+        MutableListSequence<T>* next = new MutableListSequence<T>();
         SequenceIterator<T> iterator = Begin();
         if (iterator.HasValue()) {
             iterator.MoveNext();
@@ -79,38 +89,42 @@ protected:
 
     void CheckSubsequenceIndexes(int startIndex, int endIndex) const {
         if (startIndex < 0 || endIndex < 0 || startIndex >= GetCount() || endIndex >= GetCount()) {
-            throw IndexOutOfRange("Container subsequence index is out of range");
+            throw std::out_of_range("Container subsequence index is out of range");
         }
         if (startIndex > endIndex) {
-            throw InvalidArgument("startIndex cannot be greater than endIndex");
+            throw std::invalid_argument("startIndex cannot be greater than endIndex");
         }
     }
 
-public:
+public: //конструкторы - ? 
     typedef SequenceIterator<T> Iterator;
 
-    LinearContainer() : items(new MutableArraySequence<T>()) {}
+    LinearContainer() : items(new MutableListSequence<T>()) {}
 
-    explicit LinearContainer(const Sequence<T>& sequence) : items(sequence.Clone()) {}
+    explicit LinearContainer(const Sequence<T>& sequence) : items(nullptr) { //почему есть/нету explicit
+        items = CopyToListSequence(sequence);
+    }
 
-    LinearContainer(T* data, int count) : items(new MutableArraySequence<T>(data, count)) {}
+    LinearContainer(T* data, int count) : items(new MutableListSequence<T>(data, count)) {}
 
-    LinearContainer(const LinearContainer<T>& other) : items(other.items->Clone()) {}
+    LinearContainer(const LinearContainer<T>& other) : items(nullptr) {
+        items = CopyToListSequence(*other.items);
+    }
 
-    LinearContainer<T>& operator=(const LinearContainer<T>& other) {
+    LinearContainer<T>& operator=(const LinearContainer<T>& other) { // перегрузка оператора присваивания - ?
         if (this == &other) {
             return *this;
         }
-        Sequence<T>* copy = other.items->Clone();
+        MutableListSequence<T>* copy = CopyToListSequence(*other.items); 
         delete items;
         items = copy;
         return *this;
     }
 
-    virtual ~LinearContainer() {
+    virtual ~LinearContainer() { //виртуальный деструктор, чтобы наследники нормально удалялись через LinearContainer*
         delete items;
     }
-
+    
     int GetCount() const {
         return items->GetLength();
     }
@@ -119,7 +133,7 @@ public:
         return GetCount() == 0;
     }
 
-    T Get(int index) const {
+    T Get(int index) const { //произвольный тип данных сука не абстрактный 
         return items->Get(index);
     }
 
@@ -137,11 +151,11 @@ public:
             return false;
         }
         for (int start = 0; start <= sourceLength - subLength; ++start) {
-            SequenceIterator<T> source = Begin();
+            Iterator source = Begin();
             for (int skip = 0; skip < start; ++skip) {
                 source.MoveNext();
             }
-            SequenceIterator<T> sub(subsequence);
+            Iterator sub(subsequence);
             bool equal = true;
             while (sub.HasValue()) {
                 if (!(source.Get() == sub.Get())) {

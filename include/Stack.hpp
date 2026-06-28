@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional> // function для алгоритмов
+#include <stdexcept>
 
 #include "LinearContainer.hpp"
 
@@ -13,7 +14,7 @@ public:
 
     T Peek() const {
         if (this->IsEmpty()) {
-            throw IndexOutOfRange("Stack is empty");
+            throw std::out_of_range("Stack is empty");
         }
         return this->items->GetLast();
     }
@@ -24,7 +25,7 @@ public:
 
     T Pop() {
         if (this->IsEmpty()) {
-            throw IndexOutOfRange("Stack is empty");
+            throw std::out_of_range("Stack is empty");
         }
         return this->RemoveBack();
     }

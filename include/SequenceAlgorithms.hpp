@@ -2,6 +2,7 @@
 
 #include "ArraySequence.hpp"
 #include "SequenceIterator.hpp"
+#include <stdexcept>
 
 template <class T, class TSelf>
 template <class TResult>
@@ -79,35 +80,6 @@ Sequence<TResult>* SequenceOperations<T, TSelf>::FlatMap(std::function<Sequence<
 }
 
 template <class T, class TSelf>
-Option<T> SequenceOperations<T, TSelf>::TryGetFirst(std::function<bool(T)> predicate) const { // найти первый подходящий через Option слева направо
-    const TSelf& sequence = static_cast<const TSelf&>(*this);
-    SequenceIterator<T> iterator(sequence);
-    while (iterator.HasValue()) {
-        T value = iterator.Get();
-        if (!predicate || predicate(value)) {
-            return Option<T>::Some(value);
-        }
-        iterator.MoveNext();
-    }
-    return Option<T>::None();
-}
-
-template <class T, class TSelf>
-Option<T> SequenceOperations<T, TSelf>::TryGetLast(std::function<bool(T)> predicate) const { // найти последний через Option
-    const TSelf& sequence = static_cast<const TSelf&>(*this);
-    Option<T> result = Option<T>::None();
-    SequenceIterator<T> iterator(sequence);
-    while (iterator.HasValue()) {
-        T value = iterator.Get();
-        if (!predicate || predicate(value)) {
-            result = Option<T>::Some(value);
-        }
-        iterator.MoveNext();
-    }
-    return result;
-}
-
-template <class T, class TSelf>
 Sequence<Sequence<T>*>* SequenceOperations<T, TSelf>::Split(std::function<bool(T)> separator) const { // разбить на куски
     const TSelf& sequence = static_cast<const TSelf&>(*this);
     Sequence<Sequence<T>*>* result = new MutableArraySequence<Sequence<T>*>(); // список кусков
@@ -132,7 +104,7 @@ template <class T, class TSelf>
 Sequence<T>* SequenceOperations<T, TSelf>::Slice(int index, int count, const Sequence<T>* inserted) const { // удалить count элементов и вставить другие
     const TSelf& sequence = static_cast<const TSelf&>(*this);
     if (count < 0) {
-        throw InvalidArgument("Slice count cannot be negative");
+        throw std::invalid_argument("Slice count cannot be negative");
     }
 
     int length = sequence.GetLength(); // длина исходной последовательности
@@ -143,10 +115,10 @@ Sequence<T>* SequenceOperations<T, TSelf>::Slice(int index, int count, const Seq
         start = index;
     }
     if (start < 0 || start > length) {
-        throw IndexOutOfRange("Slice index is out of range");
+        throw std::out_of_range("Slice index is out of range");
     }
     if (start + count > length) {
-        throw IndexOutOfRange("Slice count is out of range");
+        throw std::out_of_range("Slice count is out of range");
     }
 
     Sequence<T>* result = new MutableArraySequence<T>(); // новая последовательность результата

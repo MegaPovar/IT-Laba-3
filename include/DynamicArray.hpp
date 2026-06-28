@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Exceptions.hpp"
+#include <stdexcept>
 
 template <class T> // template для любого типа данных
 class DynamicArray {
@@ -10,7 +10,7 @@ private:
 
     void CheckIndex(int index) const { 
         if (index < 0 || index >= size) {
-            throw IndexOutOfRange("DynamicArray index is out of range");
+            throw std::out_of_range("DynamicArray index is out of range");
         }
     }
 
@@ -19,7 +19,7 @@ public:
 
     DynamicArray(T* items, int count) : data(nullptr), size(count) { // DynamicArray из массива
         if (count < 0) {
-            throw InvalidArgument("DynamicArray size cannot be negative");
+            throw std::invalid_argument("DynamicArray size cannot be negative");
         }
         if (count == 0) {
             data = nullptr;
@@ -33,7 +33,7 @@ public:
 
     explicit DynamicArray(int size) : data(nullptr), size(size) { // DynamicArray нужного размера
         if (size < 0) {
-            throw InvalidArgument("DynamicArray size cannot be negative");
+            throw std::invalid_argument("DynamicArray size cannot be negative");
         }
         if (size == 0) {
             data = nullptr;
@@ -93,7 +93,7 @@ public:
 
     void Resize(int newSize) {
         if (newSize < 0) {
-            throw InvalidArgument("DynamicArray size cannot be negative");
+            throw std::invalid_argument("DynamicArray size cannot be negative");
         }
         T* newData; // создаем новый
         if (newSize == 0) {

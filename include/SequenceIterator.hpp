@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Exceptions.hpp"
+#include <stdexcept>
 #include "Sequence.hpp"
 
 template <class T>
@@ -18,7 +18,7 @@ public:
 
     T Get() const {
         if (!HasValue()) {
-            throw IndexOutOfRange("Iterator is out of range");
+            throw std::out_of_range("Iterator is out of range");
         }
         return sequence->Get(position);
     }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <functional>
-
+#include <stdexcept>
 #include "LinearContainer.hpp"
 
 template <class T>
@@ -17,14 +17,14 @@ public:
 
     T Dequeue() {
         if (this->IsEmpty()) {
-            throw IndexOutOfRange("Queue is empty");
+            throw std::out_of_range("Queue is empty");
         }
         return this->RemoveFront();
     }
 
     T Peek() const {
         if (this->IsEmpty()) {
-            throw IndexOutOfRange("Queue is empty");
+            throw std::out_of_range("Queue is empty");
         }
         return this->items->GetFirst();
     }
@@ -78,8 +78,8 @@ public:
         return result;
     }
 
-    Queue<T> operator+(const Queue<T>& other) const {
-        return Concat(other);
+   Queue<T> operator+(const Queue<T>& other) const { //перегрузка оператора - ?
+       return Concat(other);
     }
 
     bool operator==(const Queue<T>& other) const {
