@@ -5,20 +5,20 @@
 #include "Sequence.hpp"
 
 template <class T>
-class ArraySequenceBase : public Sequence<T> { // базовый класс для array sequence
+class ArraySequenceBase : public Sequence<T> {
 protected:
-    DynamicArray<T> items; // внутри храним DynamicArray
+    DynamicArray<T> items;
 
-    virtual ArraySequenceBase<T>* Instance() = 0; // выбирает this или копию
-    virtual ArraySequenceBase<T>* NewEmpty() const = 0; // создает пустой объект нужного типа
+    virtual ArraySequenceBase<T>* Instance() = 0;
+    virtual ArraySequenceBase<T>* NewEmpty() const = 0;
 
-    ArraySequenceBase<T>* AppendInternal(const T& item) { // добавление в конец
+    ArraySequenceBase<T>* AppendInternal(const T& item) {
         items.Resize(items.GetSize() + 1);
         items.Set(items.GetSize() - 1, item);
         return this;
     }
 
-    ArraySequenceBase<T>* PrependInternal(const T& item) { // добавление в начало со сдвигом вправо
+    ArraySequenceBase<T>* PrependInternal(const T& item) {
         items.Resize(items.GetSize() + 1);
         for (int i = items.GetSize() - 1; i > 0; --i) {
             items.Set(i, items.Get(i - 1));
@@ -27,7 +27,7 @@ protected:
         return this;
     }
 
-    ArraySequenceBase<T>* InsertInternal(const T& item, int index) { // вставка в массив по индексу
+    ArraySequenceBase<T>* InsertInternal(const T& item, int index) {
         if (index < 0 || index > items.GetSize()) {
             throw std::out_of_range("ArraySequence insert index is out of range");
         }
@@ -40,36 +40,33 @@ protected:
     }
 
 public:
-    ArraySequenceBase() : items() {} // пустая последовательность
-    ArraySequenceBase(T* data, int count) : items(data, count) {} // из обычного массива
-    explicit ArraySequenceBase(const DynamicArray<T>& data) : items(data) {} // из DynamicArray
+    ArraySequenceBase() : items() {}
+    ArraySequenceBase(T* data, int count) : items(data, count) {}
+    explicit ArraySequenceBase(const DynamicArray<T>& data) : items(data) {}
 
-    T GetFirst() const override { // первый элемент
+    T GetFirst() const override {
         if (GetLength() == 0) {
             throw std::out_of_range("ArraySequence is empty");
         }
         return items.Get(0);
     }
 
-    T GetLast() const override { // последний элемент
+    T GetLast() const override {
         if (GetLength() == 0) {
             throw std::out_of_range("ArraySequence is empty");
         }
         return items.Get(GetLength() - 1);
     }
 
-    T Get(int index) const override
-    { // получить элемент через DynamicArray
+    T Get(int index) const override {
         return items.Get(index);
     }
 
-    int GetLength() const override
-    { // длина = размер массива
+    int GetLength() const override {
         return items.GetSize();
     }
 
-    Sequence<T> *GetSubsequence(int startIndex, int endIndex) const override
-    { // получить кусок [startIndex; endIndex]
+    Sequence<T>* GetSubsequence(int startIndex, int endIndex) const override {
         if (startIndex < 0 || endIndex < 0 || startIndex >= GetLength() || endIndex >= GetLength())
         {
             throw std::out_of_range("ArraySequence subsequence index is out of range");
@@ -78,7 +75,7 @@ public:
         {
             throw std::invalid_argument("startIndex cannot be greater than endIndex");
         }
-        ArraySequenceBase<T> *result = NewEmpty(); // новый пустой результат
+        ArraySequenceBase<T>* result = NewEmpty();
         for (int i = startIndex; i <= endIndex; ++i)
         {
             result->AppendInternal(Get(i));
@@ -86,23 +83,19 @@ public:
         return result;
     }
 
-    Sequence<T> *Append(const T &item) override
-    { // снаружи сначала берем Instance()
+    Sequence<T>* Append(const T& item) override {
         return Instance()->AppendInternal(item);
     }
 
-    Sequence<T> *Prepend(const T &item) override
-    {
+    Sequence<T>* Prepend(const T& item) override {
         return Instance()->PrependInternal(item);
     }
 
-    Sequence<T> *InsertAt(const T &item, int index) override
-    {
+    Sequence<T>* InsertAt(const T& item, int index) override {
         return Instance()->InsertInternal(item, index);
     }
 
-    Sequence<T> *Concat(const Sequence<T> *list) override
-    {
+    Sequence<T>* Concat(const Sequence<T>* list) override {
         ArraySequenceBase<T>* result = Instance();
         for (int i = 0; i < list->GetLength(); ++i) {
             result->AppendInternal(list->Get(i));
@@ -120,10 +113,10 @@ public:
 };
 
 template <class T>
-class MutableArraySequence : public ArraySequenceBase<T> { // изменяемая версия
+class MutableArraySequence : public ArraySequenceBase<T> {
 protected:
     ArraySequenceBase<T>* Instance() override {
-        return this; // меняем текущий объект
+        return this;
     }
 
     ArraySequenceBase<T>* NewEmpty() const override {
@@ -141,10 +134,10 @@ public:
 };
 
 template <class T>
-class ImmutableArraySequence : public ArraySequenceBase<T> { // неизменяемая версия
+class ImmutableArraySequence : public ArraySequenceBase<T> {
 protected:
     ArraySequenceBase<T>* Instance() override {
-        return new ImmutableArraySequence<T>(*this); // меняем копию, а не оригинал
+        return new ImmutableArraySequence<T>(*this);
     }
 
     ArraySequenceBase<T>* NewEmpty() const override {

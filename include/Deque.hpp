@@ -1,109 +1,68 @@
 #pragma once
 
-#include "LinearContainer.hpp"
 #include <stdexcept>
 
-template <class T>
-class Deque : public LinearContainer<T> {
-public:
-    Deque() : LinearContainer<T>() {}
-    explicit Deque(const Sequence<T>& sequence) : LinearContainer<T>(sequence) {}
-    Deque(T* data, int count) : LinearContainer<T>(data, count) {}
+#include "ListSequence.hpp"
 
-    void PushFront(const T& value) {
-        this->PrependFront(value);
+template <class T>
+class Deque {
+private:
+    MutableListSequence<T> data_;
+
+    void CheckNotEmpty() const {
+        if (data_.GetLength() == 0) {
+            throw std::out_of_range("Deque is empty");
+        }
     }
 
-    void PushBack(const T& value) {
-        this->AppendBack(value);
+public:
+    Deque() = default;
+
+    void PushFront(const T& item) {
+        data_.Prepend(item);
+    }
+
+    void PushBack(const T& item) {
+        data_.Append(item);
     }
 
     T PopFront() {
-        if (this->IsEmpty()) {
-            throw std::out_of_range("Deque is empty");
-        }
-        return this->RemoveFront();
+        CheckNotEmpty();
+        return data_.RemoveFirst();
     }
 
     T PopBack() {
-        if (this->IsEmpty()) {
-            throw std::out_of_range("Deque is empty");
-        }
-        return this->RemoveBack();
+        CheckNotEmpty();
+        return data_.RemoveLast();
     }
 
     T PeekFront() const {
-        if (this->IsEmpty()) {
-            throw std::out_of_range("Deque is empty");
-        }
-        return this->items->GetFirst();
+        CheckNotEmpty();
+        return data_.GetFirst();
     }
 
     T PeekBack() const {
-        if (this->IsEmpty()) {
-            throw std::out_of_range("Deque is empty");
-        }
-        return this->items->GetLast();
+        CheckNotEmpty();
+        return data_.GetLast();
+    }
+
+    int GetCount() const {
+        return data_.GetLength();
+    }
+
+    bool IsEmpty() const {
+        return data_.GetLength() == 0;
+    }
+
+    T Get(int index) const {
+        return data_.Get(index);
     }
 
     Deque<T> Concat(const Deque<T>& other) const {
         Deque<T> result(*this);
-        typename LinearContainer<T>::Iterator iterator = other.Begin();
-        while (iterator.HasValue()) {
-            result.PushBack(iterator.Get());
-            iterator.MoveNext();
+        for (int i = 0; i < other.GetCount(); ++i) {
+            result.PushBack(other.Get(i));
         }
         return result;
-    }
-
-    Deque<T> GetSubdeque(int startIndex, int endIndex) const {
-        this->CheckSubsequenceIndexes(startIndex, endIndex);
-        Deque<T> result;
-        typename LinearContainer<T>::Iterator iterator = this->Begin();
-        int position = 0;
-        while (iterator.HasValue()) {
-            if (position >= startIndex && position <= endIndex) {
-                result.PushBack(iterator.Get());
-            }
-            iterator.MoveNext();
-            ++position;
-        }
-        return result;
-    }
-
-    template <class TResult>
-    Deque<TResult> Map(std::function<TResult(T)> mapper) const {
-        Deque<TResult> result;
-        typename LinearContainer<T>::Iterator iterator = this->Begin();
-        while (iterator.HasValue()) {
-            result.PushBack(mapper(iterator.Get()));
-            iterator.MoveNext();
-        }
-        return result;
-    }
-
-    Deque<T> Where(std::function<bool(T)> predicate) const {
-        Deque<T> result;
-        typename LinearContainer<T>::Iterator iterator = this->Begin();
-        while (iterator.HasValue()) {
-            T value = iterator.Get();
-            if (predicate(value)) {
-                result.PushBack(value);
-            }
-            iterator.MoveNext();
-        }
-        return result;
-    }
-
-    Deque<T> operator+(const Deque<T>& other) const {
-        return Concat(other);
-    }
-
-    bool operator==(const Deque<T>& other) const {
-        return this->HasSameItems(other);
-    }
-
-    bool operator!=(const Deque<T>& other) const {
-        return !(*this == other);
     }
 };

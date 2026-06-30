@@ -9,7 +9,7 @@ private:
         T value;
         Node* next;
 
-        explicit Node(const T& value) : value(value), next(nullptr) {} // конструктор для создания узла 
+        explicit Node(const T& value) : value(value), next(nullptr) {}
     };
 
     Node* head;
@@ -22,13 +22,19 @@ private:
         }
     }
 
-    Node* GetNode(int index) const { // возвращает указатель на узел по индексу
+    void CheckNotEmpty() const {
+        if (length == 0) {
+            throw std::out_of_range("LinkedList is empty");
+        }
+    }
+
+    Node* GetNode(int index) const {
         CheckIndex(index);
         Node* current = head;
         for (int i = 0; i < index; ++i) {
-            current = current->next; // начав с начала переходим к нужному
+            current = current->next;
         }
-        return current;// добавить итератор указывающий на первый элемент списка чтобы сэкономить время while movenext
+        return current;
     }
 
 public:
@@ -57,18 +63,18 @@ public:
         }
     };
 
-    LinkedList() : head(nullptr), tail(nullptr), length(0) {} // создали пустой
+    LinkedList() : head(nullptr), tail(nullptr), length(0) {}
 
     LinkedList(T* items, int count) : LinkedList() {
         if (count < 0) {
             throw std::invalid_argument("LinkedList length cannot be negative");
         }
         for (int i = 0; i < count; ++i) {
-            Append(items[i]); // добавили в конец
+            Append(items[i]);
         }
     }
 
-    LinkedList(const LinkedList<T>& list) : LinkedList() { // так же как в DinamicArray конструктор копирования 
+    LinkedList(const LinkedList<T>& list) : LinkedList() {
         Iterator iterator = list.Begin();
         while (iterator.HasValue()) {
             Append(iterator.Get());
@@ -106,16 +112,12 @@ public:
     }
 
     T GetFirst() const {
-        if (length == 0) {
-            throw std::out_of_range("LinkedList is empty");
-        }
+        CheckNotEmpty();
         return head->value;
     }
 
     T GetLast() const {
-        if (length == 0) {
-            throw std::out_of_range("LinkedList is empty");
-        }
+        CheckNotEmpty();
         return tail->value;
     }
 
@@ -123,23 +125,23 @@ public:
         return GetNode(index)->value;
     }
 
-    Iterator Begin() const { // итератор на первый элемент
+    Iterator Begin() const {
         return Iterator(head);
     }
 
-    LinkedList<T>* GetSubList(int startIndex, int endIndex) const { // создаем новый список на основе части другого списка от startIndex до endIndex включительно
+    LinkedList<T>* GetSubList(int startIndex, int endIndex) const {
         CheckIndex(startIndex);
         CheckIndex(endIndex);
         if (startIndex > endIndex) {
             throw std::invalid_argument("startIndex cannot be greater than endIndex");
         }
-        LinkedList<T>* result = new LinkedList<T>(); // создаем новый 
+        LinkedList<T>* result = new LinkedList<T>();
         Iterator iterator = Begin();
         for (int i = 0; i < startIndex; ++i) {
             iterator.MoveNext();
         }
         for (int i = startIndex; i <= endIndex; ++i) {
-            result->Append(iterator.Get()); // скопировали нужные
+            result->Append(iterator.Get());
             iterator.MoveNext();
         }
         return result;
@@ -150,7 +152,7 @@ public:
     }
 
     void Append(const T& item) {
-        Node* node = new Node(item); // создаем новый узел
+        Node* node = new Node(item);
         if (length == 0) {
             head = node;
             tail = node;
@@ -171,36 +173,71 @@ public:
         ++length;
     }
 
-    void InsertAt(const T& item, int index) { // вставка по индексу
+    void InsertAt(const T& item, int index) {
         if (index < 0 || index > length) {
             throw std::out_of_range("LinkedList insert index is out of range");
         }
-        if (index == 0) { // в начало
+        if (index == 0) {
             Prepend(item);
             return;
         }
-        if (index == length) { // в конец
+        if (index == length) {
             Append(item);
             return;
         }
         Node* previous = GetNode(index - 1);
         Node* node = new Node(item);
-        node->next = previous->next; // переставляем ссылки относительно нового узла
+        node->next = previous->next;
         previous->next = node;
         ++length;
     }
 
-    LinkedList<T>* Concat(const LinkedList<T>* list) const { // склеиваем два списка (list3 = list1.Concat(&list2))
-        LinkedList<T>* result = new LinkedList<T>(*this); // копируем
+    T RemoveFirst() {
+        CheckNotEmpty();
+
+        Node* oldHead = head;
+        T value = oldHead->value;
+        head = head->next;
+        delete oldHead;
+        --length;
+
+        if (length == 0) {
+            tail = nullptr;
+        }
+
+        return value;
+    }
+
+    T RemoveLast() {
+        CheckNotEmpty();
+
+        if (length == 1) {
+            return RemoveFirst();
+        }
+
+        Node* previous = GetNode(length - 2);
+        Node* oldTail = tail;
+        T value = oldTail->value;
+
+        delete oldTail;
+        tail = previous;
+        tail->next = nullptr;
+        --length;
+
+        return value;
+    }
+
+    LinkedList<T>* Concat(const LinkedList<T>* list) const {
+        LinkedList<T>* result = new LinkedList<T>(*this);
         Iterator iterator = list->Begin();
         while (iterator.HasValue()) {
-            result->Append(iterator.Get()); // добавляем новые элементы в конец
+            result->Append(iterator.Get());
             iterator.MoveNext();
         }
         return result;
     }
 
-    T& operator[](int index) { // n раз вызывается, убрать
+    T& operator[](int index) {
         return GetNode(index)->value;
     }
 

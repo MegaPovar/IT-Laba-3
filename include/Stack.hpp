@@ -1,94 +1,54 @@
 #pragma once
 
-#include <functional> // function для алгоритмов
 #include <stdexcept>
 
-#include "LinearContainer.hpp"
+#include "ListSequence.hpp"
 
 template <class T>
-class Stack : public LinearContainer<T> {
-public:
-    Stack() : LinearContainer<T>() {} // пустой стек
-    explicit Stack(const Sequence<T>& sequence) : LinearContainer<T>(sequence) {} // конструктор из sequence для создания стека из любой последовательности
-    Stack(T* data, int count) : LinearContainer<T>(data, count) {}
+class Stack {
+private:
+    MutableListSequence<T> data_;
 
-    T Peek() const {
-        if (this->IsEmpty()) {
+    void CheckNotEmpty() const {
+        if (data_.GetLength() == 0) {
             throw std::out_of_range("Stack is empty");
         }
-        return this->items->GetLast();
     }
 
-    void Push(const T& value) { 
-        this->AppendBack(value);
+public:
+    Stack() = default;
+
+    void Push(const T& item) {
+        data_.Prepend(item);
     }
 
     T Pop() {
-        if (this->IsEmpty()) {
-            throw std::out_of_range("Stack is empty");
-        }
-        return this->RemoveBack();
+        CheckNotEmpty();
+        return data_.RemoveFirst();
     }
 
-    Stack<T> Concat(const Stack<T>& other) const { 
+    T Peek() const {
+        CheckNotEmpty();
+        return data_.GetFirst();
+    }
+
+    int GetCount() const {
+        return data_.GetLength();
+    }
+
+    bool IsEmpty() const {
+        return data_.GetLength() == 0;
+    }
+
+    T Get(int index) const {
+        return data_.Get(index);
+    }
+
+    Stack<T> Concat(const Stack<T>& other) const {
         Stack<T> result(*this);
-        typename LinearContainer<T>::Iterator iterator = other.Begin();
-        while (iterator.HasValue()) {
-            result.Push(iterator.Get());
-            iterator.MoveNext();
+        for (int i = other.GetCount() - 1; i >= 0; --i) {
+            result.Push(other.Get(i));
         }
         return result;
     }
-
-    Stack<T> GetSubstack(int startIndex, int endIndex) const { // кусок стека по индексам
-        this->CheckSubsequenceIndexes(startIndex, endIndex);
-        Stack<T> result;
-        typename LinearContainer<T>::Iterator iterator = this->Begin();
-        int position = 0;
-        while (iterator.HasValue()) {
-            if (position >= startIndex && position <= endIndex) {
-                result.Push(iterator.Get());
-            }
-            iterator.MoveNext();
-            ++position;
-        }
-        return result;
-    }
-
-    template <class TResult>
-    Stack<TResult> Map(std::function<TResult(T)> mapper) const { // применить функцию ко всем элементам
-        Stack<TResult> result;
-        typename LinearContainer<T>::Iterator iterator = this->Begin();
-        while (iterator.HasValue()) {
-            result.Push(mapper(iterator.Get()));
-            iterator.MoveNext();
-        }
-        return result;
-    }
-
-    Stack<T> Where(std::function<bool(T)> predicate) const { // оставить элементы по условию
-        Stack<T> result;
-        typename LinearContainer<T>::Iterator iterator = this->Begin();
-        while (iterator.HasValue()) {
-            T value = iterator.Get();
-            if (predicate(value)) {
-                result.Push(value);
-            }
-            iterator.MoveNext();
-        }
-        return result;
-    }
-
-    Stack<T> operator+(const Stack<T>& other) const { //c = a + b вызывая concat
-        return Concat(other);
-    }
-
-    bool operator==(const Stack<T>& other) const { // сравнение поэлементно
-        return this->HasSameItems(other);
-    }
-
-    bool operator!=(const Stack<T>& other) const { // обратное к ==
-        return !(*this == other);
-    }
-
 };

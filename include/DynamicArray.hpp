@@ -2,11 +2,11 @@
 
 #include <stdexcept>
 
-template <class T> // template для любого типа данных
+template <class T>
 class DynamicArray {
 private:
-    T* data; // указатель типа data -> [10][20][30]
-    int size; // элементы
+    T* data;
+    int size;
 
     void CheckIndex(int index) const { 
         if (index < 0 || index >= size) {
@@ -15,47 +15,46 @@ private:
     }
 
 public:
-    DynamicArray() : data(nullptr), size(0) {} // создаем пустой массив
+    DynamicArray() : data(nullptr), size(0) {}
 
-    DynamicArray(T* items, int count) : data(nullptr), size(count) { // DynamicArray из массива
+    DynamicArray(T* items, int count) : data(nullptr), size(count) {
         if (count < 0) {
             throw std::invalid_argument("DynamicArray size cannot be negative");
         }
         if (count == 0) {
             data = nullptr;
         } else {
-            data = new T[count]; // создаем массив в памяти с размером count
+            data = new T[count];
         }
         for (int i = 0; i < count; ++i) {
             data[i] = items[i];
         }
     }
 
-    explicit DynamicArray(int size) : data(nullptr), size(size) { // DynamicArray нужного размера
+    explicit DynamicArray(int size) : data(nullptr), size(size) {
         if (size < 0) {
             throw std::invalid_argument("DynamicArray size cannot be negative");
         }
         if (size == 0) {
             data = nullptr;
         } else {
-            data = new T[size](); // память под массив, () - заполняет нулями
+            data = new T[size]();
         }
     }
 
-    DynamicArray(const DynamicArray<T>& dynamicArray) // конструктор копирования. новый массив на основе другого для избежания проблемы поверхностного копирования
-        : data(nullptr), size(dynamicArray.size) {
+    DynamicArray(const DynamicArray<T>& dynamicArray) : data(nullptr), size(dynamicArray.size) {
         if (size == 0) {
             data = nullptr;
         } else {
-            data = new T[size]; // память для копирования нового
+            data = new T[size];
         }
         for (int i = 0; i < size; ++i) {
             data[i] = dynamicArray.data[i];
         }
     }
 
-    DynamicArray<T>& operator=(const DynamicArray<T>& other) { // 
-        if (this == &other) { // this указатель на те]кущий объект
+    DynamicArray<T>& operator=(const DynamicArray<T>& other) {
+        if (this == &other) {
             return *this;
         }
         T* newData;
@@ -64,7 +63,7 @@ public:
         } else {
             newData = new T[other.size];
         }
-        for (int i = 0; i < other.size; ++i) { //копируем данные в только что созданный массив
+        for (int i = 0; i < other.size; ++i) {
             newData[i] = other.data[i];
         }
         delete[] data;
@@ -86,7 +85,7 @@ public:
         return size;
     }
 
-    void Set(int index, const T& value) { // меняем элемент массива
+    void Set(int index, const T& value) {
         CheckIndex(index);
         data[index] = value;
     }
@@ -95,7 +94,7 @@ public:
         if (newSize < 0) {
             throw std::invalid_argument("DynamicArray size cannot be negative");
         }
-        T* newData; // создаем новый
+        T* newData;
         if (newSize == 0) {
             newData = nullptr;
         } else {
@@ -108,10 +107,10 @@ public:
         } else {
             copyCount = newSize;
         }
-        for (int i = 0; i < copyCount; ++i) { // копируем старое
+        for (int i = 0; i < copyCount; ++i) {
             newData[i] = data[i];
         }
-        delete[] data; // удаляем старое
+        delete[] data;
         data = newData; 
         size = newSize;
     }

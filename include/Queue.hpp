@@ -1,92 +1,54 @@
 #pragma once
 
-#include <functional>
 #include <stdexcept>
-#include "LinearContainer.hpp"
+
+#include "ListSequence.hpp"
 
 template <class T>
-class Queue : public LinearContainer<T> {
-public:
-    Queue() : LinearContainer<T>() {}
-    explicit Queue(const Sequence<T>& sequence) : LinearContainer<T>(sequence) {}
-    Queue(T* data, int count) : LinearContainer<T>(data, count) {}
+class Queue {
+private:
+    MutableListSequence<T> data_;
 
-    void Enqueue(const T& value) {
-        this->AppendBack(value);
+    void CheckNotEmpty() const {
+        if (data_.GetLength() == 0) {
+            throw std::out_of_range("Queue is empty");
+        }
+    }
+
+public:
+    Queue() = default;
+
+    void Enqueue(const T& item) {
+        data_.Append(item);
     }
 
     T Dequeue() {
-        if (this->IsEmpty()) {
-            throw std::out_of_range("Queue is empty");
-        }
-        return this->RemoveFront();
+        CheckNotEmpty();
+        return data_.RemoveFirst();
     }
 
     T Peek() const {
-        if (this->IsEmpty()) {
-            throw std::out_of_range("Queue is empty");
-        }
-        return this->items->GetFirst();
+        CheckNotEmpty();
+        return data_.GetFirst();
+    }
+
+    int GetCount() const {
+        return data_.GetLength();
+    }
+
+    bool IsEmpty() const {
+        return data_.GetLength() == 0;
+    }
+
+    T Get(int index) const {
+        return data_.Get(index);
     }
 
     Queue<T> Concat(const Queue<T>& other) const {
         Queue<T> result(*this);
-        typename LinearContainer<T>::Iterator iterator = other.Begin();
-        while (iterator.HasValue()) {
-            result.Enqueue(iterator.Get());
-            iterator.MoveNext();
+        for (int i = 0; i < other.GetCount(); ++i) {
+            result.Enqueue(other.Get(i));
         }
         return result;
-    }
-
-    Queue<T> GetSubqueue(int startIndex, int endIndex) const {
-        this->CheckSubsequenceIndexes(startIndex, endIndex);
-        Queue<T> result;
-        typename LinearContainer<T>::Iterator iterator = this->Begin();
-        int position = 0;
-        while (iterator.HasValue()) {
-            if (position >= startIndex && position <= endIndex) {
-                result.Enqueue(iterator.Get());
-            }
-            iterator.MoveNext();
-            ++position;
-        }
-        return result;
-    }
-
-    template <class TResult>
-    Queue<TResult> Map(std::function<TResult(T)> mapper) const {
-        Queue<TResult> result;
-        typename LinearContainer<T>::Iterator iterator = this->Begin();
-        while (iterator.HasValue()) {
-            result.Enqueue(mapper(iterator.Get()));
-            iterator.MoveNext();
-        }
-        return result;
-    }
-
-    Queue<T> Where(std::function<bool(T)> predicate) const {
-        Queue<T> result;
-        typename LinearContainer<T>::Iterator iterator = this->Begin();
-        while (iterator.HasValue()) {
-            T value = iterator.Get();
-            if (predicate(value)) {
-                result.Enqueue(value);
-            }
-            iterator.MoveNext();
-        }
-        return result;
-    }
-
-   Queue<T> operator+(const Queue<T>& other) const { //перегрузка оператора - ?
-       return Concat(other);
-    }
-
-    bool operator==(const Queue<T>& other) const {
-        return this->HasSameItems(other);
-    }
-
-    bool operator!=(const Queue<T>& other) const {
-        return !(*this == other);
     }
 };

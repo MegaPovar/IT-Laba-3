@@ -5,50 +5,50 @@
 #include "Sequence.hpp"
 
 template <class T>
-class ListSequenceBase : public Sequence<T> { // базовый класс для list sequence
+class ListSequenceBase : public Sequence<T> {
 protected:
-    LinkedList<T> items; // внутри храним LinkedList
+    LinkedList<T> items;
 
-    virtual ListSequenceBase<T>* Instance() = 0; // this или копия для immutable
-    virtual ListSequenceBase<T>* NewEmpty() const = 0; // пустая последовательность нужного типа
+    virtual ListSequenceBase<T>* Instance() = 0;
+    virtual ListSequenceBase<T>* NewEmpty() const = 0;
 
-    ListSequenceBase<T>* AppendInternal(const T& item) { // добавление в конец списка
+    ListSequenceBase<T>* AppendInternal(const T& item) {
         items.Append(item);
         return this;
     }
 
-    ListSequenceBase<T>* PrependInternal(const T& item) { // добавление в начало списка
+    ListSequenceBase<T>* PrependInternal(const T& item) {
         items.Prepend(item);
         return this;
     }
 
-    ListSequenceBase<T>* InsertInternal(const T& item, int index) { // вставка через LinkedList
+    ListSequenceBase<T>* InsertInternal(const T& item, int index) {
         items.InsertAt(item, index);
         return this;
     }
 
 public:
-    ListSequenceBase() : items() {} // пустой список
-    ListSequenceBase(T* data, int count) : items(data, count) {} // из обычного массива
-    explicit ListSequenceBase(const LinkedList<T>& list) : items(list) {} // из готового LinkedList
+    ListSequenceBase() : items() {}
+    ListSequenceBase(T* data, int count) : items(data, count) {}
+    explicit ListSequenceBase(const LinkedList<T>& list) : items(list) {}
 
-    T GetFirst() const override { // первый элемент
+    T GetFirst() const override {
         return items.GetFirst();
     }
 
-    T GetLast() const override { // последний элемент
+    T GetLast() const override {
         return items.GetLast();
     }
 
-    T Get(int index) const override { // получить по индексу
+    T Get(int index) const override {
         return items.Get(index);
     }
 
-    int GetLength() const override { // длина списка
+    int GetLength() const override {
         return items.GetLength();
     }
 
-    Sequence<T>* GetSubsequence(int startIndex, int endIndex) const override { // кусок последовательности
+    Sequence<T>* GetSubsequence(int startIndex, int endIndex) const override {
         if (startIndex < 0 || endIndex < 0 || startIndex >= GetLength() || endIndex >= GetLength()) {
             throw std::out_of_range("Subsequence indices are out of range");    
         }
@@ -56,14 +56,9 @@ public:
             throw std::invalid_argument("startIndex cannot be greater than endIndex");
         }
 
-        ListSequenceBase<T>* result = NewEmpty(); // результат нужного типа
-        typename LinkedList<T>::Iterator iterator = items.Begin(); // идем по списку без лишнего subList
-        for (int i = 0; i < startIndex; ++i) {
-            iterator.MoveNext();
-        }
+        ListSequenceBase<T>* result = NewEmpty();
         for (int i = startIndex; i <= endIndex; ++i) {
-            result->AppendInternal(iterator.Get());
-            iterator.MoveNext();
+            result->AppendInternal(items.Get(i));
         }
         return result;
     }
@@ -98,10 +93,12 @@ public:
 };
 
 template <class T>
-class MutableListSequence : public ListSequenceBase<T> { // изменяемая версия
+class MutableListSequence : public ListSequenceBase<T> {
 protected:
+    using ListSequenceBase<T>::items;
+
     ListSequenceBase<T>* Instance() override {
-        return this; // работаем с текущим объектом
+        return this;
     }
 
     ListSequenceBase<T>* NewEmpty() const override {
@@ -114,16 +111,24 @@ public:
     explicit MutableListSequence(const LinkedList<T>& list) : ListSequenceBase<T>(list) {}
     MutableListSequence(const MutableListSequence<T>& other) : ListSequenceBase<T>(other.items) {}
 
+    T RemoveFirst() {
+        return items.RemoveFirst();
+    }
+
+    T RemoveLast() {
+        return items.RemoveLast();
+    }
+
     Sequence<T>* Clone() const override {
         return new MutableListSequence<T>(*this);
     }
 };
 
 template <class T>
-class ImmutableListSequence : public ListSequenceBase<T> { // неизменяемая версия
+class ImmutableListSequence : public ListSequenceBase<T> {
 protected:
     ListSequenceBase<T>* Instance() override {
-        return new ImmutableListSequence<T>(*this); // возвращаем копию
+        return new ImmutableListSequence<T>(*this);
     }
 
     ListSequenceBase<T>* NewEmpty() const override {
