@@ -16,7 +16,7 @@ public:
         return position < sequence->GetLength();
     }
 
-    T Get() const {
+    const T& Get() const {
         if (!HasValue()) {
             throw std::out_of_range("Iterator is out of range");
         }

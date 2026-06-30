@@ -49,7 +49,7 @@ public:
             return current != nullptr;
         }
 
-        T Get() const {
+        const T& Get() const {
             if (current == nullptr) {
                 throw std::out_of_range("Iterator is out of range");
             }
@@ -68,6 +68,9 @@ public:
     LinkedList(T* items, int count) : LinkedList() {
         if (count < 0) {
             throw std::invalid_argument("LinkedList length cannot be negative");
+        }
+        if (items == nullptr && count > 0) {
+            throw std::invalid_argument("LinkedList source cannot be null");
         }
         for (int i = 0; i < count; ++i) {
             Append(items[i]);
@@ -111,17 +114,17 @@ public:
         length = 0;
     }
 
-    T GetFirst() const {
+    const T& GetFirst() const {
         CheckNotEmpty();
         return head->value;
     }
 
-    T GetLast() const {
+    const T& GetLast() const {
         CheckNotEmpty();
         return tail->value;
     }
 
-    T Get(int index) const {
+    const T& Get(int index) const {
         return GetNode(index)->value;
     }
 
@@ -227,9 +230,9 @@ public:
         return value;
     }
 
-    LinkedList<T>* Concat(const LinkedList<T>* list) const {
+    LinkedList<T>* Concat(const LinkedList<T>& list) const {
         LinkedList<T>* result = new LinkedList<T>(*this);
-        Iterator iterator = list->Begin();
+        Iterator iterator = list.Begin();
         while (iterator.HasValue()) {
             result->Append(iterator.Get());
             iterator.MoveNext();

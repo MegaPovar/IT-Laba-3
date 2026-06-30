@@ -51,55 +51,64 @@ double ReadDouble(const std::string& prompt) {
 }
 
 template <class T>
-void PrintStack(const Stack<T>& stack) {
+void PrintStack(Stack<T> stack) {
     std::cout << "[";
-    for (int i = 0; i < stack.GetCount(); ++i) {
-        if (i > 0) {
+    bool first = true;
+    while (!stack.IsEmpty()) {
+        if (!first) {
             std::cout << ", ";
         }
-        std::cout << stack.Get(i);
+        std::cout << stack.Pop();
+        first = false;
     }
     std::cout << "]";
 }
 
 template <class T>
-void PrintQueue(const Queue<T>& queue) {
+void PrintQueue(Queue<T> queue) {
     std::cout << "[";
-    for (int i = 0; i < queue.GetCount(); ++i) {
-        if (i > 0) {
+    bool first = true;
+    while (!queue.IsEmpty()) {
+        if (!first) {
             std::cout << ", ";
         }
-        std::cout << queue.Get(i);
+        std::cout << queue.Dequeue();
+        first = false;
     }
     std::cout << "]";
 }
 
 template <class T>
-void PrintDeque(const Deque<T>& deque) {
+void PrintDeque(Deque<T> deque) {
     std::cout << "[";
-    for (int i = 0; i < deque.GetCount(); ++i) {
-        if (i > 0) {
+    bool first = true;
+    while (!deque.IsEmpty()) {
+        if (!first) {
             std::cout << ", ";
         }
-        std::cout << deque.Get(i);
+        std::cout << deque.PopFront();
+        first = false;
     }
     std::cout << "]";
 }
 
 template <class T>
-void PrintPriorityQueue(const PriorityQueue<T>& queue) {
+void PrintPriorityQueue(PriorityQueue<T> queue) {
     std::cout << "[";
-    for (int i = 0; i < queue.GetCount(); ++i) {
-        PriorityQueueItem<T> item = queue.Get(i);
-        if (i > 0) {
+    bool first = true;
+    while (!queue.IsEmpty()) {
+        if (!first) {
             std::cout << ", ";
         }
-        std::cout << item.value << "(p=" << item.priority << ")";
+        int priority = queue.PeekPriority();
+        T value = queue.Dequeue();
+        std::cout << value << "(p=" << priority << ")";
+        first = false;
     }
     std::cout << "]";
 }
 
-void PrintLinearForm(const LinearForm& form) {
+void PrintLinearForm(const LinearForm<double>& form) {
     std::cout << form.GetCoefficient(0);
     for (int i = 1; i < form.GetCoefficientsCount(); ++i) {
         std::cout << " + " << form.GetCoefficient(i) << "*x" << i;
@@ -172,7 +181,7 @@ PriorityQueue<int> ReadPriorityQueue() {
     return queue;
 }
 
-LinearForm ReadLinearForm() {
+LinearForm<double> ReadLinearForm() {
     int variablesCount = ReadInt("Variables count: ");
     if (variablesCount < 0) {
         throw std::invalid_argument("Variables count cannot be negative");
@@ -184,7 +193,7 @@ LinearForm ReadLinearForm() {
         prompt << "a" << i << ": ";
         coefficients.Append(ReadDouble(prompt.str()));
     }
-    return LinearForm(coefficients);
+    return LinearForm<double>(coefficients);
 }
 
 MutableListSequence<double> ReadVariables(int variablesCount) {
@@ -367,7 +376,7 @@ void WorkWithPriorityQueue(PriorityQueue<int>& queue) {
     }
 }
 
-void WorkWithLinearForm(LinearForm& form) {
+void WorkWithLinearForm(LinearForm<double>& form) {
     bool running = true;
     while (running) {
         std::cout << "\nLinear form menu\n";
@@ -393,19 +402,19 @@ void WorkWithLinearForm(LinearForm& form) {
                 form.SetCoefficient(index, value);
             } else if (choice == 4) {
                 std::cout << "Enter second linear form\n";
-                LinearForm other = ReadLinearForm();
-                LinearForm result = form.Add(other);
+                LinearForm<double> other = ReadLinearForm();
+                LinearForm<double> result = form.Add(other);
                 PrintLinearForm(result);
                 std::cout << "\n";
             } else if (choice == 5) {
                 std::cout << "Enter second linear form\n";
-                LinearForm other = ReadLinearForm();
-                LinearForm result = form.Subtract(other);
+                LinearForm<double> other = ReadLinearForm();
+                LinearForm<double> result = form.Subtract(other);
                 PrintLinearForm(result);
                 std::cout << "\n";
             } else if (choice == 6) {
                 double scalar = ReadDouble("Scalar: ");
-                LinearForm result = form.Multiply(scalar);
+                LinearForm<double> result = form.Multiply(scalar);
                 PrintLinearForm(result);
                 std::cout << "\n";
             } else if (choice == 0) {
@@ -445,7 +454,7 @@ int main() {
                 PriorityQueue<int> priorityQueue = ReadPriorityQueue();
                 WorkWithPriorityQueue(priorityQueue);
             } else if (choice == 5) {
-                LinearForm form = ReadLinearForm();
+                LinearForm<double> form = ReadLinearForm();
                 WorkWithLinearForm(form);
             } else if (choice == 0) {
                 running = false;

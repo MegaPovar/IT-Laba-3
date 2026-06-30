@@ -44,21 +44,21 @@ public:
     ArraySequenceBase(T* data, int count) : items(data, count) {}
     explicit ArraySequenceBase(const DynamicArray<T>& data) : items(data) {}
 
-    T GetFirst() const override {
+    const T& GetFirst() const override {
         if (GetLength() == 0) {
             throw std::out_of_range("ArraySequence is empty");
         }
         return items.Get(0);
     }
 
-    T GetLast() const override {
+    const T& GetLast() const override {
         if (GetLength() == 0) {
             throw std::out_of_range("ArraySequence is empty");
         }
         return items.Get(GetLength() - 1);
     }
 
-    T Get(int index) const override {
+    const T& Get(int index) const override {
         return items.Get(index);
     }
 
@@ -95,12 +95,27 @@ public:
         return Instance()->InsertInternal(item, index);
     }
 
-    Sequence<T>* Concat(const Sequence<T>* list) override {
+    Sequence<T>* Concat(const Sequence<T>& list) override {
         ArraySequenceBase<T>* result = Instance();
-        for (int i = 0; i < list->GetLength(); ++i) {
-            result->AppendInternal(list->Get(i));
+        Sequence<T>* copy = nullptr;
+        const Sequence<T>* source = &list;
+        try {
+            if (&list == this) {
+                copy = list.Clone();
+                source = copy;
+            }
+            for (int i = 0; i < source->GetLength(); ++i) {
+                result->AppendInternal(source->Get(i));
+            }
+            delete copy;
+            return result;
+        } catch (...) {
+            delete copy;
+            if (result != this) {
+                delete result;
+            }
+            throw;
         }
-        return result;
     }
 
     T& operator[](int index) override {
@@ -153,3 +168,5 @@ public:
         return new ImmutableArraySequence<T>(*this);
     }
 };
+
+#include "SequenceAlgorithms.hpp"

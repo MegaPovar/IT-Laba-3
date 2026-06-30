@@ -26,7 +26,9 @@ TEST(DynamicArrayTests, BasicOperationsAndErrors) {
 
     array.Resize(0);
     EXPECT_EQ(array.GetSize(), 0);
+    EXPECT_GE(array.GetCapacity(), 5);
     EXPECT_THROW(DynamicArray<int> invalid(-1), std::invalid_argument);
+    EXPECT_THROW(DynamicArray<int> nullSource(nullptr, 3), std::invalid_argument);
 }
 
 // LinkedList: добавление, вставка и кусок списка
@@ -55,6 +57,7 @@ TEST(LinkedListTests, BasicOperationsAndErrors) {
     EXPECT_THROW(empty.GetFirst(), std::out_of_range);
     EXPECT_THROW(empty.GetLast(), std::out_of_range);
     EXPECT_THROW(empty.InsertAt(1, 2), std::out_of_range);
+    EXPECT_THROW(LinkedList<int> nullSource(nullptr, 2), std::invalid_argument);
 }
 
 // sequence на массиве и списке, mutable/immutable
@@ -85,6 +88,26 @@ TEST(SequenceTests, MutableAndImmutableBehavior) {
 
     EXPECT_THROW(delete mutableArray.GetSubsequence(-1, 1), std::out_of_range);
     EXPECT_THROW(delete mutableArray.GetSubsequence(2, 1), std::invalid_argument);
+}
+
+TEST(SequenceTests, SelfConcatWorksForMutableArrayAndList) {
+    int source[] = {1, 2, 3};
+
+    MutableArraySequence<int> arraySequence(source, 3);
+    Sequence<int>* arrayResult = arraySequence.Concat(arraySequence);
+    EXPECT_EQ(arrayResult, &arraySequence);
+    EXPECT_EQ(arraySequence.GetLength(), 6);
+    EXPECT_EQ(arraySequence.Get(0), 1);
+    EXPECT_EQ(arraySequence.Get(3), 1);
+    EXPECT_EQ(arraySequence.Get(5), 3);
+
+    MutableListSequence<int> listSequence(source, 3);
+    Sequence<int>* listResult = listSequence.Concat(listSequence);
+    EXPECT_EQ(listResult, &listSequence);
+    EXPECT_EQ(listSequence.GetLength(), 6);
+    EXPECT_EQ(listSequence.Get(0), 1);
+    EXPECT_EQ(listSequence.Get(3), 1);
+    EXPECT_EQ(listSequence.Get(5), 3);
 }
 
 // map, where, reduce и остальные методы sequence
@@ -128,4 +151,9 @@ TEST(SequenceAlgorithmTests, MapWhereReduceSliceZip) {
     EXPECT_EQ(zipped->Get(0).first, 1);
     EXPECT_EQ(zipped->Get(0).second, 7);
     delete zipped;
+
+    EXPECT_THROW(delete sequence.Map<int>(std::function<int(int)>()), std::invalid_argument);
+    EXPECT_THROW(delete sequence.Where(std::function<bool(int)>()), std::invalid_argument);
+    EXPECT_THROW(sequence.Reduce<int>(std::function<int(int, int)>(), 0), std::invalid_argument);
+    EXPECT_THROW(delete Zip<int>(nullptr, &shortSequence), std::invalid_argument);
 }

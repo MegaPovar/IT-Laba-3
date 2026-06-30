@@ -27,7 +27,7 @@ public:
         return data_.RemoveFirst();
     }
 
-    T Peek() const {
+    const T& Peek() const {
         CheckNotEmpty();
         return data_.GetFirst();
     }
@@ -40,14 +40,11 @@ public:
         return data_.GetLength() == 0;
     }
 
-    T Get(int index) const {
-        return data_.Get(index);
-    }
-
     Queue<T> Concat(const Queue<T>& other) const {
         Queue<T> result(*this);
-        for (int i = 0; i < other.GetCount(); ++i) {
-            result.Enqueue(other.Get(i));
+        Queue<T> source(other);
+        while (!source.IsEmpty()) {
+            result.Enqueue(source.Dequeue());
         }
         return result;
     }

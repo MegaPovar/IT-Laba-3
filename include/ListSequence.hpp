@@ -32,15 +32,15 @@ public:
     ListSequenceBase(T* data, int count) : items(data, count) {}
     explicit ListSequenceBase(const LinkedList<T>& list) : items(list) {}
 
-    T GetFirst() const override {
+    const T& GetFirst() const override {
         return items.GetFirst();
     }
 
-    T GetLast() const override {
+    const T& GetLast() const override {
         return items.GetLast();
     }
 
-    T Get(int index) const override {
+    const T& Get(int index) const override {
         return items.Get(index);
     }
 
@@ -75,12 +75,27 @@ public:
         return Instance()->InsertInternal(item, index);
     }
 
-    Sequence<T>* Concat(const Sequence<T>* list) override {
+    Sequence<T>* Concat(const Sequence<T>& list) override {
         ListSequenceBase<T>* result = Instance();
-        for (int i = 0; i < list->GetLength(); ++i) {
-            result->AppendInternal(list->Get(i));
+        Sequence<T>* copy = nullptr;
+        const Sequence<T>* source = &list;
+        try {
+            if (&list == this) {
+                copy = list.Clone();
+                source = copy;
+            }
+            for (int i = 0; i < source->GetLength(); ++i) {
+                result->AppendInternal(source->Get(i));
+            }
+            delete copy;
+            return result;
+        } catch (...) {
+            delete copy;
+            if (result != this) {
+                delete result;
+            }
+            throw;
         }
-        return result;
     }
 
     T& operator[](int index) override {
@@ -119,6 +134,29 @@ public:
         return items.RemoveLast();
     }
 
+    void InsertBefore(const T& item, bool (*shouldInsertBefore)(const T&, const T&)) {
+        if (shouldInsertBefore == nullptr) {
+            throw std::invalid_argument("Insert condition is empty");
+        }
+
+        MutableListSequence<T> result;
+        bool inserted = false;
+        auto iterator = items.Begin();
+        while (iterator.HasValue()) {
+            const T& current = iterator.Get();
+            if (!inserted && shouldInsertBefore(item, current)) {
+                result.Append(item);
+                inserted = true;
+            }
+            result.Append(current);
+            iterator.MoveNext();
+        }
+        if (!inserted) {
+            result.Append(item);
+        }
+        items = result.items;
+    }
+
     Sequence<T>* Clone() const override {
         return new MutableListSequence<T>(*this);
     }
@@ -145,3 +183,5 @@ public:
         return new ImmutableListSequence<T>(*this);
     }
 };
+
+#include "SequenceAlgorithms.hpp"

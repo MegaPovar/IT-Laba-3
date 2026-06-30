@@ -16,7 +16,6 @@ TEST(StackTests, PushPopPeekAndConcat) {
     stack.Push(30);
 
     EXPECT_EQ(stack.GetCount(), 3);
-    EXPECT_EQ(stack.Get(0), 30);
     EXPECT_EQ(stack.Peek(), 30);
     EXPECT_EQ(stack.Pop(), 30);
     EXPECT_EQ(stack.Peek(), 20);
@@ -27,8 +26,10 @@ TEST(StackTests, PushPopPeekAndConcat) {
 
     Stack<int> joined = stack.Concat(other);
     EXPECT_EQ(joined.GetCount(), 4);
-    EXPECT_EQ(joined.Get(0), 50);
-    EXPECT_EQ(joined.Get(3), 10);
+    EXPECT_EQ(joined.Pop(), 50);
+    EXPECT_EQ(joined.Pop(), 40);
+    EXPECT_EQ(joined.Pop(), 20);
+    EXPECT_EQ(joined.Pop(), 10);
 
     Stack<int> empty;
     EXPECT_THROW(empty.Pop(), std::out_of_range);
@@ -53,7 +54,6 @@ TEST(QueueTests, EnqueueDequeuePeekAndConcat) {
     queue.Enqueue(3);
 
     EXPECT_EQ(queue.GetCount(), 3);
-    EXPECT_EQ(queue.Get(1), 2);
     EXPECT_EQ(queue.Peek(), 1);
     EXPECT_EQ(queue.Dequeue(), 1);
     EXPECT_EQ(queue.Peek(), 2);
@@ -63,8 +63,9 @@ TEST(QueueTests, EnqueueDequeuePeekAndConcat) {
 
     Queue<int> joined = queue.Concat(other);
     EXPECT_EQ(joined.GetCount(), 3);
-    EXPECT_EQ(joined.Get(0), 2);
-    EXPECT_EQ(joined.Get(2), 4);
+    EXPECT_EQ(joined.Dequeue(), 2);
+    EXPECT_EQ(joined.Dequeue(), 3);
+    EXPECT_EQ(joined.Dequeue(), 4);
 
     Queue<int> empty;
     EXPECT_THROW(empty.Dequeue(), std::out_of_range);
@@ -85,8 +86,8 @@ TEST(DequeTests, PushPopBothSidesAndConcat) {
     EXPECT_EQ(deque.PeekBack(), 3);
     EXPECT_EQ(deque.PopFront(), 0);
     EXPECT_EQ(deque.PopBack(), 3);
-    EXPECT_EQ(deque.Get(0), 1);
-    EXPECT_EQ(deque.Get(1), 2);
+    EXPECT_EQ(deque.PeekFront(), 1);
+    EXPECT_EQ(deque.PeekBack(), 2);
 
     Deque<int> other;
     other.PushBack(5);
@@ -135,8 +136,8 @@ TEST(PriorityQueueTests, ConcatKeepsPriorityOrder) {
 
     PriorityQueue<int> joined = first.Concat(second);
     EXPECT_EQ(joined.GetCount(), 4);
-    EXPECT_EQ(joined.Get(0).value, 40);
-    EXPECT_EQ(joined.Get(1).value, 20);
-    EXPECT_EQ(joined.Get(2).value, 30);
-    EXPECT_EQ(joined.Get(3).value, 10);
+    EXPECT_EQ(joined.Dequeue(), 40);
+    EXPECT_EQ(joined.Dequeue(), 20);
+    EXPECT_EQ(joined.Dequeue(), 30);
+    EXPECT_EQ(joined.Dequeue(), 10);
 }

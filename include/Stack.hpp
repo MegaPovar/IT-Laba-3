@@ -27,7 +27,7 @@ public:
         return data_.RemoveFirst();
     }
 
-    T Peek() const {
+    const T& Peek() const {
         CheckNotEmpty();
         return data_.GetFirst();
     }
@@ -40,14 +40,15 @@ public:
         return data_.GetLength() == 0;
     }
 
-    T Get(int index) const {
-        return data_.Get(index);
-    }
-
     Stack<T> Concat(const Stack<T>& other) const {
         Stack<T> result(*this);
-        for (int i = other.GetCount() - 1; i >= 0; --i) {
-            result.Push(other.Get(i));
+        Stack<T> source(other);
+        Stack<T> reversed;
+        while (!source.IsEmpty()) {
+            reversed.Push(source.Pop());
+        }
+        while (!reversed.IsEmpty()) {
+            result.Push(reversed.Pop());
         }
         return result;
     }

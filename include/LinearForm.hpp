@@ -5,9 +5,10 @@
 #include "ListSequence.hpp"
 #include "SequenceIterator.hpp"
 
+template <class T>
 class LinearForm {
 private:
-    MutableListSequence<double> coefficients;
+    MutableListSequence<T> coefficients;
 
     void CheckCoefficientIndex(int index) const {
         if (index < 0 || index >= coefficients.GetLength()) {
@@ -15,28 +16,31 @@ private:
         }
     }
 
-    void CheckSameVariablesCount(const LinearForm& other) const {
+    void CheckSameVariablesCount(const LinearForm<T>& other) const {
         if (GetVariablesCount() != other.GetVariablesCount()) {
             throw std::invalid_argument("Linear forms have different variables count");
         }
     }
 
 public:
-    explicit LinearForm(const Sequence<double>& source) {
+    explicit LinearForm(const Sequence<T>& source) {
         if (source.GetLength() == 0) {
             throw std::invalid_argument("LinearForm needs at least one coefficient");
         }
 
-        SequenceIterator<double> iterator(source);
+        SequenceIterator<T> iterator(source);
         while (iterator.HasValue()) {
             coefficients.Append(iterator.Get());
             iterator.MoveNext();
         }
     }
 
-    LinearForm(double* data, int count) {
+    LinearForm(T* data, int count) {
         if (count <= 0) {
             throw std::invalid_argument("LinearForm needs at least one coefficient");
+        }
+        if (data == nullptr) {
+            throw std::invalid_argument("LinearForm source cannot be null");
         }
 
         for (int i = 0; i < count; ++i) {
@@ -52,55 +56,55 @@ public:
         return coefficients.GetLength();
     }
 
-    double GetCoefficient(int index) const {
+    const T& GetCoefficient(int index) const {
         CheckCoefficientIndex(index);
         return coefficients.Get(index);
     }
 
-    void SetCoefficient(int index, double value) {
+    void SetCoefficient(int index, const T& value) {
         CheckCoefficientIndex(index);
         coefficients[index] = value;
     }
 
-    double Evaluate(const Sequence<double>& variables) const {
+    T Evaluate(const Sequence<T>& variables) const {
         if (variables.GetLength() != GetVariablesCount()) {
             throw std::invalid_argument("Variables count does not match linear form");
         }
 
-        double result = coefficients.Get(0);
-        SequenceIterator<double> iterator(variables);
+        T result = coefficients.Get(0);
+        SequenceIterator<T> iterator(variables);
         int index = 1;
         while (iterator.HasValue()) {
-            result += coefficients.Get(index) * iterator.Get();
+            result = result + coefficients.Get(index) * iterator.Get();
             iterator.MoveNext();
             ++index;
         }
         return result;
     }
 
-    LinearForm Add(const LinearForm& other) const {
+    LinearForm<T> Add(const LinearForm<T>& other) const {
         CheckSameVariablesCount(other);
-        MutableListSequence<double> resultCoefficients;
+        MutableListSequence<T> resultCoefficients;
         for (int i = 0; i < coefficients.GetLength(); ++i) {
             resultCoefficients.Append(coefficients.Get(i) + other.coefficients.Get(i));
         }
-        return LinearForm(resultCoefficients);
+        return LinearForm<T>(resultCoefficients);
     }
 
-    LinearForm Subtract(const LinearForm& other) const {
+    LinearForm<T> Subtract(const LinearForm<T>& other) const {
         CheckSameVariablesCount(other);
-        MutableListSequence<double> resultCoefficients;
+        MutableListSequence<T> resultCoefficients;
         for (int i = 0; i < coefficients.GetLength(); ++i) {
             resultCoefficients.Append(coefficients.Get(i) - other.coefficients.Get(i));
         }
-        return LinearForm(resultCoefficients);
+        return LinearForm<T>(resultCoefficients);
     }
 
-    LinearForm Multiply(double scalar) const {
-        MutableListSequence<double> resultCoefficients;
+    LinearForm<T> Multiply(const T& scalar) const {
+        MutableListSequence<T> resultCoefficients;
         for (int i = 0; i < coefficients.GetLength(); ++i) {
             resultCoefficients.Append(coefficients.Get(i) * scalar);
         }
-        return LinearForm(resultCoefficients);
+        return LinearForm<T>(resultCoefficients);
     }
 };
